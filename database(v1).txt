@@ -1,0 +1,222 @@
+postgres=# \d users
+                                       Table "public.users"
+    Column     |            Type             | Collation | Nullable |           Default
+---------------+-----------------------------+-----------+----------+------------------------------
+ id            | integer                     |           | not null | generated always as identity
+ full_name     | character varying(100)      |           | not null |
+ email         | character varying(100)      |           | not null |
+ password_hash | character varying(255)      |           | not null |
+ role          | role_status                 |           | not null | 'CUSTOMER'::role_status
+ created_at    | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at    | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+    "users_email_key" UNIQUE CONSTRAINT, btree (email)
+Referenced by:
+    TABLE "addresses" CONSTRAINT "addresses_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+    TABLE "carts" CONSTRAINT "carts_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+    TABLE "orders" CONSTRAINT "orders_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+    TABLE "seller_profiles" CONSTRAINT "seller_profile_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+
+
+postgres=# \d seller_profiles
+                                       Table "public.seller_profiles"
+       Column        |            Type             | Collation | Nullable |             Default
+---------------------+-----------------------------+-----------+----------+----------------------------------
+ id                  | integer                     |           | not null | generated always as identity
+ national_id         | character varying(14)       |           | not null |
+ national_id_image   | character varying(255)      |           | not null |
+ bank_account_number | character varying(30)       |           | not null |
+ bank_name           | character varying(50)       |           | not null |
+ status              | seller_profile_status       |           | not null | 'PENDING'::seller_profile_status
+ created_at          | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at          | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+ user_id             | integer                     |           | not null |
+Indexes:
+    "sellerprofile_pkey" PRIMARY KEY, btree (id)
+    "bank_account_number" UNIQUE CONSTRAINT, btree (bank_account_number)
+    "national_id" UNIQUE CONSTRAINT, btree (national_id)
+    "seller_profile_user_id_key" UNIQUE CONSTRAINT, btree (user_id)
+Foreign-key constraints:
+    "seller_profile_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+Referenced by:
+    TABLE "stores" CONSTRAINT "stores_seller_profile_id_fkey" FOREIGN KEY (seller_profile_id) REFERENCES seller_profiles(id)
+
+
+postgres=# \d stores
+                                         Table "public.stores"
+      Column       |            Type             | Collation | Nullable |           Default
+-------------------+-----------------------------+-----------+----------+------------------------------
+ id                | integer                     |           | not null | generated always as identity
+ seller_profile_id | integer                     |           | not null |
+ name              | character varying(100)      |           | not null |
+ status            | store_status                |           | not null |
+ created_at        | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at        | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+Indexes:
+    "stores_pkey" PRIMARY KEY, btree (id)
+    "stores_seller_profile_id_key" UNIQUE CONSTRAINT, btree (seller_profile_id)
+Foreign-key constraints:
+    "stores_seller_profile_id_fkey" FOREIGN KEY (seller_profile_id) REFERENCES seller_profiles(id)
+Referenced by:
+    TABLE "products" CONSTRAINT "products_store_id_fkey" FOREIGN KEY (store_id) REFERENCES stores(id)
+
+
+postgres=# \d products
+                                     Table "public.products"
+   Column    |            Type             | Collation | Nullable |           Default
+-------------+-----------------------------+-----------+----------+------------------------------
+ id          | integer                     |           | not null | generated always as identity
+ store_id    | integer                     |           | not null |
+ name        | character varying(100)      |           | not null |
+ price       | numeric(10,2)               |           | not null |
+ quantity    | integer                     |           | not null |
+ description | text                        |           | not null | ''::text
+ is_hidden   | boolean                     |           | not null | false
+ created_at  | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at  | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+Indexes:
+    "products_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "products_store_id_fkey" FOREIGN KEY (store_id) REFERENCES stores(id)
+Referenced by:
+    TABLE "cart_items" CONSTRAINT "cart_items_prodyct_id_fkey" FOREIGN KEY (product_id) REFERENCES products(id)
+    TABLE "order_items" CONSTRAINT "order_items_product_id_fkey" FOREIGN KEY (product_id) REFERENCES products(id)
+    TABLE "product_categories" CONSTRAINT "product_categories_product_id_fkey" FOREIGN KEY (product_id) REFERENCES products(id)
+    TABLE "product_images" CONSTRAINT "product_images_product_id_fkey" FOREIGN KEY (product_id) REFERENCES products(id)
+
+
+postgres=# \d categories
+                               Table "public.categories"
+ Column |          Type          | Collation | Nullable |           Default
+--------+------------------------+-----------+----------+------------------------------
+ id     | integer                |           | not null | generated always as identity
+ name   | character varying(100) |           | not null |
+Indexes:
+    "categories_pkey" PRIMARY KEY, btree (id)
+    "categories_name_key" UNIQUE CONSTRAINT, btree (name)
+Referenced by:
+    TABLE "product_categories" CONSTRAINT "product_categories_category_id_fkey" FOREIGN KEY (category_id) REFERENCES categories(id)
+
+
+postgres=# \d product_images
+                               Table "public.product_images"
+   Column   |          Type          | Collation | Nullable |           Default
+------------+------------------------+-----------+----------+------------------------------
+ id         | integer                |           | not null | generated always as identity
+ product_id | integer                |           | not null |
+ image_url  | character varying(255) |           | not null |
+Indexes:
+    "product_images_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "product_images_product_id_fkey" FOREIGN KEY (product_id) REFERENCES products(id)
+
+
+postgres=# \d product_categories
+           Table "public.product_categories"
+   Column    |  Type   | Collation | Nullable | Default
+-------------+---------+-----------+----------+---------
+ product_id  | integer |           | not null |
+ category_id | integer |           | not null |
+Indexes:
+    "product_categories_pkey" PRIMARY KEY, btree (product_id, category_id)
+Foreign-key constraints:
+    "product_categories_category_id_fkey" FOREIGN KEY (category_id) REFERENCES categories(id)
+    "product_categories_product_id_fkey" FOREIGN KEY (product_id) REFERENCES products(id)
+
+
+postgres=# \d addresses
+                                    Table "public.addresses"
+     Column      |          Type          | Collation | Nullable |           Default
+-----------------+------------------------+-----------+----------+------------------------------
+ id              | integer                |           | not null | generated always as identity
+ user_id         | integer                |           | not null |
+ governorate     | character varying(50)  |           | not null |
+ district        | character varying(100) |           | not null |
+ street          | character varying(100) |           | not null |
+ building_number | character varying(20)  |           | not null |
+ floor           | character varying(10)  |           |          |
+ apartment       | character varying(20)  |           |          |
+ phone_number    | character varying(20)  |           | not null |
+ notes           | text                   |           | not null | ''::text
+ is_default      | boolean                |           | not null | false
+ city            | character varying(50)  |           | not null |
+Indexes:
+    "addresses_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "addresses_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+Referenced by:
+    TABLE "orders" CONSTRAINT "orders_address_id_fkey" FOREIGN KEY (address_id) REFERENCES addresses(id)
+
+
+postgres=# \d carts
+                          Table "public.carts"
+ Column  |  Type   | Collation | Nullable |           Default
+---------+---------+-----------+----------+------------------------------
+ id      | integer |           | not null | generated always as identity
+ user_id | integer |           | not null |
+Indexes:
+    "carts_pkey" PRIMARY KEY, btree (id)
+    "carts_user_id_key" UNIQUE CONSTRAINT, btree (user_id)
+Foreign-key constraints:
+    "carts_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+Referenced by:
+    TABLE "cart_items" CONSTRAINT "cart_items_cart_id_fkey" FOREIGN KEY (cart_id) REFERENCES carts(id)
+
+
+postgres=# \d cart_items
+                         Table "public.cart_items"
+   Column   |  Type   | Collation | Nullable |           Default
+------------+---------+-----------+----------+------------------------------
+ id         | integer |           | not null | generated always as identity
+ cart_id    | integer |           | not null |
+ product_id | integer |           | not null |
+ quantity   | integer |           | not null |
+Indexes:
+    "cart_items_pkey" PRIMARY KEY, btree (id)
+    "cart_items_cart_id_product_id_key" UNIQUE CONSTRAINT, btree (cart_id, product_id)
+Check constraints:
+    "cart_items_quantity_check1" CHECK (quantity > 0)
+Foreign-key constraints:
+    "cart_items_cart_id_fkey" FOREIGN KEY (cart_id) REFERENCES carts(id)
+    "cart_items_prodyct_id_fkey" FOREIGN KEY (product_id) REFERENCES products(id)
+
+
+postgres=# \d orders
+                                       Table "public.orders"
+     Column     |            Type             | Collation | Nullable |           Default
+----------------+-----------------------------+-----------+----------+------------------------------
+ id             | integer                     |           | not null | generated always as identity
+ user_id        | integer                     |           | not null |
+ address_id     | integer                     |           | not null |
+ status         | order_status                |           | not null |
+ payment_status | order_payment_status        |           | not null |
+ paid_at        | timestamp without time zone |           |          |
+ total_price    | numeric(10,2)               |           | not null |
+ created_at     | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+Indexes:
+    "orders_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "orders_address_id_fkey" FOREIGN KEY (address_id) REFERENCES addresses(id)
+    "orders_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+Referenced by:
+    TABLE "order_items" CONSTRAINT "order_items_order_id_fkey" FOREIGN KEY (order_id) REFERENCES orders(id)
+
+
+postgres=# \d order_items
+                            Table "public.order_items"
+   Column   |     Type      | Collation | Nullable |           Default
+------------+---------------+-----------+----------+------------------------------
+ id         | integer       |           | not null | generated always as identity
+ order_id   | integer       |           | not null |
+ product_id | integer       |           | not null |
+ quantity   | integer       |           | not null |
+ item_price | numeric(10,2) |           | not null |
+Indexes:
+    "order_items_pkey" PRIMARY KEY, btree (id)
+Check constraints:
+    "order_items_item_price_check1" CHECK (item_price > 0::numeric)
+    "order_items_quantity_check" CHECK (quantity > 0)
+Foreign-key constraints:
+    "order_items_order_id_fkey" FOREIGN KEY (order_id) REFERENCES orders(id)
+    "order_items_product_id_fkey" FOREIGN KEY (product_id) REFERENCES products(id)

@@ -1,14 +1,16 @@
 // users.controller
+
+
+import  { CreateUserDto }  from "../dtos/create-user.dto";
+import createUserService from "../services/users.service";
 import { Request, Response } from "express";
-export const createUser = (req: Request, res: Response)=>{
-    const {fullname, email, password} = req.body;
+const createUser = (req: Request, res: Response)=>{
+
+    const user: CreateUserDto = req.body;
     res.json({
         "message": "User created successfully",
-        user:{
-            fullname,
-            email,
-            password
-        }
+        user: createUserService(user)
     })
 
 }
+export default createUser

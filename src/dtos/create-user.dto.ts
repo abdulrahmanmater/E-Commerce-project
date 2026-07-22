@@ -9,6 +9,7 @@ export interface  UserResponseDto {
     role: UserRole;
 }
 
+
 export enum UserRole {
     CUSTOMER = "CUSTOMER",
     SELLER = "SELLER",

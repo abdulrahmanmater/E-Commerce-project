@@ -1,8 +1,7 @@
-export interface CreateUserDto {
-    fullname: string;
-    email: string;
-    password: string;
-}
+//create-user.dto.ts
+import { z } from "zod";
+import {createUserSchema} from "../schemas/user.schema";
+
 export interface  UserResponseDto {
     id: number;
     full_name: string;
@@ -15,3 +14,6 @@ export enum UserRole {
     SELLER = "SELLER",
     ADMIN = "ADMIN",
 }
+
+export type CreateUserDto =
+    z.infer<typeof createUserSchema>["body"];

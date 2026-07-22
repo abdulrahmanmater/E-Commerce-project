@@ -3,6 +3,7 @@
 import pool from "../config/db";
 import  { CreateUserDto, UserResponseDto }  from "../dtos/create-user.dto";
 
+
 const createUser = async (user:CreateUserDto)=>{
     const result = await pool.query <UserResponseDto> (`
         Insert into users (full_name, email, password_hash)

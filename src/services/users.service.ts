@@ -16,7 +16,7 @@ const createUser = async (user: CreateUserDto)=>{
     return {
         message: "User created successfully",
         ...newUser,
-        data:{
+        tokens:{
             accessToken: token
         }
     }

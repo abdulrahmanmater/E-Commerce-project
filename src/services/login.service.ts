@@ -24,7 +24,7 @@ const login = async (user: LoginRequestDto)=>{
     return {
         message: "Login successful",
         user: userWithoutPassword,
-        data:{
+        tokens:{
             accessToken: token
         }
     };

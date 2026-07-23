@@ -2,6 +2,7 @@
 
 import { UserResponseDto, UserRole } from "../dtos/create-user.dto";
 export interface LoginRequestDto {
+    id?: number;
     email: string;
     password: string;
 }

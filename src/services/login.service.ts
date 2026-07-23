@@ -3,6 +3,7 @@
 import { LoginRequestDto } from "../dtos/login.dto";
 import { comparePassword } from "../utils/password";
 import loginRepository from "../repositories/findUserByEmail";
+import { generateAccessToken } from "../utils/jwt";
 
 
 const login = async (user: LoginRequestDto)=>{
@@ -16,11 +17,17 @@ const login = async (user: LoginRequestDto)=>{
     if (!isPasswordCorrect){
         return {
             message: "the Password or email is incorrect"
-        }    }
+        }
+    }
+    const token = generateAccessToken({id: existedUser.id, role: existedUser.role});
     const { password_hash, ...userWithoutPassword } = existedUser;
     return {
         message: "Login successful",
-        user: userWithoutPassword};
+        user: userWithoutPassword,
+        data:{
+            accessToken: token
+        }
+    };
 }
 
 export default login;

@@ -80,7 +80,7 @@ src
 ## Register
 
 ```http
-POST /users
+POST /auth/register
 ```
 
 Creates a new user.
@@ -93,7 +93,7 @@ Response:
   "full_name": "Ahmed Ali",
   "email": "ahmed@example.com",
   "role": "CUSTOMER",
-  "data": {
+  "tokens": {
     "accessToken": "<jwt>"
   }
 }
@@ -120,7 +120,7 @@ Response:
     "email": "ahmed@example.com",
     "role": "CUSTOMER"
   },
-  "data": {
+  "token": {
     "accessToken": "<jwt>"
   }
 }

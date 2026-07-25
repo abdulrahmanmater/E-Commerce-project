@@ -2,13 +2,18 @@
 
 import { Request, Response, NextFunction } from "express";
 import { UserRole } from "../dtos/create-user.dto";
+import { ForbiddenError } from "../errors/forbidden-error";
 
-export const canManageUser = (req: Request, res: Response, next: NextFunction) => {
-    const id = req.params.id;
-    const userId = req.user.id;
+export const canManageUser = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const id = req.params.id;
+  const userId = req.user.id;
 
-    if (req.user.role !== UserRole.ADMIN && id !== userId.toString()) {
-        return res.status(403).json({ message: "Forbidden" });
-    }
-    next();
-}
+  if (req.user.role !== UserRole.ADMIN && id !== userId.toString()) {
+    throw new ForbiddenError();
+  }
+  next();
+};

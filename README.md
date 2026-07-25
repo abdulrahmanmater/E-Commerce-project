@@ -10,49 +10,69 @@ The goal of this project is not only to build an e-commerce API, but also to fol
 
 ## Authentication
 
-* User Registration
-* User Login
-* Password Hashing using bcrypt
-* JWT Access Token Generation
-* Protected Routes
-* Authentication Middleware
+- User Registration
+- User Login
+- Password Hashing using bcrypt
+- JWT Access Token Generation
+- Protected Routes
+- Authentication Middleware
+
+## Authorization
+
+- Role-Based Authorization (RBAC)
+- Ownership Authorization Middleware (`canManageUser`)
+- Custom Authorization Middleware
 
 ## Validation
 
-* Request Validation using Zod
-* Strong Type Safety with TypeScript DTOs
+- Request Validation using Zod
+- Strong Type Safety with TypeScript DTOs
+
+## Error Handling
+
+- Global Error Handler
+- Custom Error Classes
+- Centralized Error Responses
+
+Supported Custom Errors:
+
+- BadRequestError
+- UnauthorizedError
+- ForbiddenError
+- NotFoundError
+- ConflictError
 
 ## Database
 
-* PostgreSQL
-* Connection Pool (`pg`)
-* Parameterized Queries
-* Layered Repository Pattern
+- PostgreSQL
+- Connection Pool (`pg`)
+- Parameterized Queries
+- Layered Repository Pattern
 
 ## Architecture
 
-* Layered Architecture
-* Controllers
-* Services
-* Repositories
-* DTOs
-* Middlewares
-* Utilities
-* Validation Schemas
+- Layered Architecture
+- Controllers
+- Services
+- Repositories
+- DTOs
+- Middlewares
+- Utilities
+- Validation Schemas
 
 ---
 
 # Tech Stack
 
-* Node.js
-* Express.js
-* TypeScript
-* PostgreSQL
-* pg
-* Zod
-* bcrypt
-* jsonwebtoken
-* dotenv
+- Node.js
+- Express.js
+- TypeScript
+- PostgreSQL
+- pg
+- Zod
+- bcrypt
+- jsonwebtoken
+- dotenv
 
 ---
 
@@ -61,8 +81,10 @@ The goal of this project is not only to build an e-commerce API, but also to fol
 ```text
 src
 ├── config
+├── constants
 ├── controllers
 ├── dtos
+├── errors
 ├── middlewares
 ├── repositories
 ├── routes
@@ -120,7 +142,7 @@ Response:
     "email": "ahmed@example.com",
     "role": "CUSTOMER"
   },
-  "token": {
+  "tokens": {
     "accessToken": "<jwt>"
   }
 }
@@ -190,22 +212,21 @@ npm run build
 
 # Future Roadmap
 
-* Role-Based Authorization
-* Products Module
-* Categories Module
-* Stores Module
-* Shopping Cart
-* Orders
-* Inventory Management
-* Refresh Tokens
-* Email Verification
-* Password Reset
-* File Upload
-* Redis Caching
-* Testing (Unit & Integration)
-* Docker
-* CI/CD
-* Deployment
+- Products Module
+- Categories Module
+- Stores Module
+- Shopping Cart
+- Orders
+- Inventory Management
+- Refresh Tokens
+- Email Verification
+- Password Reset
+- File Upload
+- Redis Caching
+- Testing (Unit & Integration)
+- Docker
+- CI/CD
+- Deployment
 
 ---
 
@@ -213,20 +234,23 @@ npm run build
 
 This project follows several backend engineering practices:
 
-* Layered Architecture
-* Separation of Concerns
-* Type Safety
-* DTO Pattern
-* Repository Pattern
-* Service Layer Pattern
-* Input Validation
-* Secure Password Storage
-* JWT Authentication
-* Parameterized SQL Queries
+- Layered Architecture
+- Separation of Concerns
+- Type Safety
+- DTO Pattern
+- Repository Pattern
+- Service Layer Pattern
+- Input Validation
+- Secure Password Storage
+- JWT Authentication
+- Role-Based Authorization (RBAC)
+- Ownership-Based Authorization
+- Global Error Handling
+- Custom Error Classes
+- Parameterized SQL Queries
 
 ---
 
 # License
 
 This project is intended for learning, portfolio, and educational purposes.
-

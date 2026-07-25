@@ -2,6 +2,7 @@
 
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../errors/app-error";
+import { BadRequestError } from "../errors/bad-request-error";
 
 export const globalErrorHandler = (
   err: Error,
@@ -9,15 +10,22 @@ export const globalErrorHandler = (
   res: Response,
   next: NextFunction,
 ) => {
-  if (err instanceof AppError) {
+  if (!(err instanceof AppError)) {
+    console.error(err);
+    return res.status(500).json({
+      status: "error",
+      message: "Internal Server Error",
+    });
+  }
+  if (err instanceof BadRequestError) {
     return res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
+      errors: err.errors,
     });
   }
-  console.error(err);
-  return res.status(500).json({
-    status: "error",
-    message: "Internal Server Error",
+  return res.status(err.statusCode).json({
+    status: err.status,
+    message: err.message,
   });
 };

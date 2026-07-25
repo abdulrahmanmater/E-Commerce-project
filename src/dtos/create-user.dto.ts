@@ -15,6 +15,5 @@ export enum UserRole {
     SELLER = "SELLER",
     ADMIN = "ADMIN",
 }
-
 export type CreateUserDto =
     z.infer<typeof createUserSchema>["body"];

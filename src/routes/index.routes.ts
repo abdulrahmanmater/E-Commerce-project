@@ -2,14 +2,19 @@
 
 import { Router } from "express";
 const router = Router();
-import {auth} from "../middlewares/auth.middleware";
-import {authorize} from "../middlewares/authorize.middleware";
-import { UserRole } from "../dtos/create-user.dto";
+import { auth } from "../middlewares/auth.middleware";
+import { authorize } from "../middlewares/authorize.middleware";
+import { UserRole } from "../dtos/user/user.response.dto";
 
-router.get("/",auth,authorize(UserRole.ADMIN, UserRole.SELLER), (req, res)=>{
+router.get(
+  "/",
+  auth,
+  authorize(UserRole.ADMIN, UserRole.SELLER),
+  (req, res) => {
     res.json({
-  "message": "E-Commerce API is running"
-    })
-})
+      message: "E-Commerce API is running",
+    });
+  },
+);
 
 export default router;

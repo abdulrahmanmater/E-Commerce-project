@@ -1,14 +1,14 @@
 //login.service.ts
 
-import { LoginRequestDto } from "../dtos/login.dto";
+import { LoginRequestDto } from "../dtos/auth/login.dto";
 import { comparePassword } from "../utils/password";
-import loginRepository from "../repositories/findUserByEmail";
+import { findUserByEmail } from "../repositories/user.repository";
 import { generateAccessToken } from "../utils/jwt";
 import { AppError } from "../errors/app-error";
 import { StatusCodes } from "../constants/status-codes";
 
-const login = async (user: LoginRequestDto) => {
-  const existedUser = await loginRepository(user);
+export const login = async (user: LoginRequestDto) => {
+  const existedUser = await findUserByEmail(user);
   if (!existedUser) {
     throw new AppError(
       "the Password or email is incorrect",
@@ -38,5 +38,3 @@ const login = async (user: LoginRequestDto) => {
     },
   };
 };
-
-export default login;

@@ -1,13 +1,12 @@
 //auth.controller.ts
 
 import { Request, Response } from "express";
-import { LoginRequestDto } from "../dtos/login.dto";
-import loginService from "../services/login.service";
+import { LoginRequestDto } from "../dtos/auth/login.dto";
+import { login as loginService } from "../services/auth";
 
-const login = async (req: Request, res: Response)=>{
-    const user : LoginRequestDto = req.body;
-    return res.json(await loginService(user))
-}
+// login auth
 
-
-export default login;
+export const login = async (req: Request, res: Response) => {
+  const user: LoginRequestDto = req.body;
+  return res.json(await loginService(user));
+};

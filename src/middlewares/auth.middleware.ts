@@ -1,4 +1,4 @@
-//auth.MDW
+//auth.middleware.ts
 
 import { Request, Response, NextFunction } from "express";
 import { verifyAccessToken } from "../utils/jwt";

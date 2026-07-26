@@ -1,7 +1,7 @@
 //canManageUser.middleware.ts
 
 import { Request, Response, NextFunction } from "express";
-import { UserRole } from "../dtos/create-user.dto";
+import { UserRole } from "../dtos/user/user.response.dto";
 import { ForbiddenError } from "../errors/forbidden-error";
 
 export const canManageUser = (

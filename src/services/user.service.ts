@@ -3,19 +3,22 @@
 import { NotFoundError } from "../errors/not-found-error";
 import { CreateUserDto } from "../dtos/user/create-user.dto";
 import { UserResponseDto } from "../dtos/user/user.response.dto";
-import { createUser, findUserById } from "../repositories/user.repository";
+import {
+  createUser as createUserRepository,
+  findUserById,
+} from "../repositories/user.repository";
 import { hashPassword } from "../utils/password";
 import { generateAccessToken } from "../utils/jwt";
 import { UserRow } from "../types/database/user.row";
 
 // createUser
-export const User = async (user: CreateUserDto) => {
+export const createUser = async (user: CreateUserDto) => {
   const hash = await hashPassword(user.password);
   // const modifiedUser = {
   //   ...user,
   //   fullname
   // }
-  const newUser = await createUser({
+  const newUser = await createUserRepository({
     ...user,
     password: hash,
   });

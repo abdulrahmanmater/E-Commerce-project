@@ -7,6 +7,6 @@ import { login as loginService } from "../services/auth";
 // login auth
 
 export const login = async (req: Request, res: Response) => {
-  const user: LoginRequestDto = req.body;
+  const user = req.validated!.body as LoginRequestDto;
   return res.json(await loginService(user));
 };

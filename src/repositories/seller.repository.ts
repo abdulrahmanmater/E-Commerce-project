@@ -1,0 +1,108 @@
+//seller.repository.ts
+
+import { PoolClient } from "pg";
+import { SellerRowResponse } from "../types/database/seller/create.row";
+import { StoreRowResponse } from "../types/database/store/create.row";
+import { UserRow } from "../types/database/user/user.row";
+import { CreateSellerRow } from "../types/database/create-seller.row";
+
+//get seller status
+
+export const getSellerStatus = async (client: PoolClient, id: number) => {
+  const result = await client.query(
+    `
+      select status from seller_profiles where user_id = $1
+    `,
+    [id],
+  );
+  return result.rows[0]?.status;
+};
+
+//lock user row
+
+export const lockUser = async (client: PoolClient, userId: number) => {
+  const result = await client.query<UserRow>(
+    `
+    SELECT id, full_name, email, role
+    FROM users
+    WHERE id = $1
+    FOR UPDATE;
+    `,
+    [userId],
+  );
+
+  return result.rows[0];
+};
+
+export const createSellerProfile = async (
+  client: PoolClient,
+  id: number,
+  data: CreateSellerRow,
+) => {
+  const result = await client.query<SellerRowResponse>(
+    `
+    INSERT INTO seller_profiles (
+      national_id,
+      national_id_image,
+      bank_account_number,
+      bank_name,
+      user_id,
+      status
+    )
+    VALUES ($1, $2, $3, $4, $5, 'PENDING')
+    RETURNING
+      id,
+      bank_name,
+      status;
+    `,
+    [
+      data.seller.national_id,
+      data.seller.national_id_image,
+      data.seller.bank_account_number,
+      data.seller.bank_name,
+      id,
+    ],
+  );
+
+  return result.rows[0];
+};
+
+export const createStore = async (
+  client: PoolClient,
+  sellerProfileId: number,
+  storeName: string,
+) => {
+  const result = await client.query<StoreRowResponse>(
+    `
+    INSERT INTO stores (
+      name,
+      seller_profile_id,
+      status
+    )
+    VALUES ($1, $2, 'PENDING')
+    RETURNING
+      id,
+      name,
+      seller_profile_id,
+      status;
+    `,
+    [storeName, sellerProfileId],
+  );
+
+  return result.rows[0];
+};
+
+//delete seller_profile
+
+export const deleteSellerProfile = async (
+  client: PoolClient,
+  userId: number,
+): Promise<void> => {
+  await client.query(
+    `
+    DELETE FROM seller_profiles
+    WHERE user_id = $1
+    `,
+    [userId],
+  );
+};

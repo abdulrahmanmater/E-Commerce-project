@@ -28,19 +28,7 @@ export const validate =
       throw new BadRequestError("Validation failed", errors);
     }
 
-    req.body = result.data.body;
-    Object.defineProperty(req, "params", {
-      value: result.data.params,
-      writable: true,
-      enumerable: true,
-      configurable: true,
-    });
-    Object.defineProperty(req, "query", {
-      value: result.data.query,
-      writable: true,
-      enumerable: true,
-      configurable: true,
-    });
+    req.validated = result.data;
 
     next();
   };

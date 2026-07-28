@@ -2,9 +2,10 @@
 
 import pool from "../config/db";
 import { CreateUserDto } from "../dtos/user/create.dto";
-import { UserRow, UserRowWithPassword } from "../types/database/user.row";
-import { LoginRequestDto } from "../dtos/auth/login.dto";
-import { UpdateUserRow } from "../types/database/update-user.row";
+import { UserRow, UserRowWithPassword } from "../types/database/user/user.row";
+import { UpdateUserRow } from "../types/database/user/update-user.row";
+import { UserRole } from "../dtos/user/user.response.dto";
+import { PoolClient } from "pg";
 
 //CreateUser
 export const createUser = async (user: CreateUserDto) => {
@@ -46,6 +47,17 @@ export const findUserById = async (id: number) => {
   return user.rows[0];
 };
 
+//findUser in transaction
+export const findUser = async (client: PoolClient, id: number) => {
+  const user = await client.query<UserRow>(
+    `
+        SELECT id, full_name, email, role FROM users WHERE id = $1
+    `,
+    [id],
+  );
+  return user.rows[0];
+};
+
 // update user
 
 export const updateUser = async (
@@ -78,6 +90,25 @@ export const deleteUser = async (id: number): Promise<UserRow | undefined> => {
   const result = await pool.query<UserRow>(
     `delete from users where id = $1 returning id, full_name, email, role`,
     [id],
+  );
+  return result.rows[0];
+};
+
+//update user role
+
+export const updateUserRole = async (
+  client: PoolClient,
+  id: number,
+  role: UserRole,
+) => {
+  const result = await client.query<UserRow>(
+    `
+        UPDATE users
+        SET role = $1
+        WHERE id = $2
+        RETURNING id, full_name, email, role
+    `,
+    [role, id],
   );
   return result.rows[0];
 };

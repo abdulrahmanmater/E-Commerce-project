@@ -13,13 +13,67 @@ export const globalErrorHandler = (
   next: NextFunction,
 ) => {
   if (err instanceof DatabaseError) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      status: "error",
-      message:
-        err.code === "23505"
-          ? "Email already exists" // to-do global it
-          : "The fields should not be empty",
+    console.log({
+      code: err.code,
+      message: err.message,
+      detail: err.detail,
+      where: err.where,
+      table: err.table,
+      column: err.column,
+      constraint: err.constraint,
     });
+    switch (err.code) {
+      case "23505":
+        switch (err.constraint) {
+          case "users_email_key":
+            return res.status(StatusCodes.CONFLICT).json({
+              status: "error",
+              message: "Email already exists",
+            });
+
+          case "national_id":
+            return res.status(StatusCodes.CONFLICT).json({
+              status: "error",
+              message: "National ID already exists",
+            });
+
+          case "bank_account_number":
+            return res.status(StatusCodes.CONFLICT).json({
+              status: "error",
+              message: "Bank account number already exists",
+            });
+
+          default:
+            return res.status(StatusCodes.CONFLICT).json({
+              status: "error",
+              message: "A unique value already exists",
+            });
+        }
+
+      case "23502":
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          status: "error",
+          message: "A required field is missing",
+        });
+
+      case "23503":
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          status: "error",
+          message: "Invalid reference",
+        });
+
+      case "22P02":
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          status: "error",
+          message: "Invalid input syntax",
+        });
+
+      default:
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          status: "error",
+          message: "Database error",
+        });
+    }
   }
   if (err instanceof BadRequestError) {
     return res.status(err.statusCode).json({

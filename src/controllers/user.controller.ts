@@ -1,5 +1,6 @@
 // users.controller
 
+import { CreateUserDto } from "../dtos/user/create.dto";
 import {
   createUser as createUserService,
   getCurrentUser as getCurrentUserService,
@@ -11,7 +12,7 @@ import { Request, Response } from "express";
 // addUser
 
 export const createUser = async (req: Request, res: Response) => {
-  const user = req.body;
+  const user = req.validated!.body as CreateUserDto;
   res.status(201).json(await createUserService(user));
 };
 

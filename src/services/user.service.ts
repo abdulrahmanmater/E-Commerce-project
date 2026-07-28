@@ -12,9 +12,9 @@ import {
 } from "../repositories/user.repository";
 import { hashPassword } from "../utils/password";
 import { generateAccessToken } from "../utils/jwt";
-import { UserRow } from "../types/database/user.row";
+import { UserRow } from "../types/database/user/user.row";
 import { UpdateUserDto } from "../dtos/user/update.dto";
-import { UpdateUserRow } from "../types/database/update-user.row";
+import { UpdateUserRow } from "../types/database/user/update-user.row";
 import { ConflictError } from "../errors/conflict-error";
 
 // createUser

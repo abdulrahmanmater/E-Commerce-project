@@ -1,6 +1,6 @@
 // user.row
 
-import { UserRole } from "../../dtos/user/user.response.dto";
+import { UserRole } from "../../../dtos/user/user.response.dto";
 
 export interface UserRow {
   id: number;

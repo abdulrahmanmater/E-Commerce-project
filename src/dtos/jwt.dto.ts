@@ -1,7 +1,6 @@
 //jwt.dto
 
-
-export interface TokenPayload  {
-    id: number;
-    role: "CUSTOMER" | "SELLER" | "ADMIN";
+export interface TokenPayload {
+  id: number;
+  role: "CUSTOMER" | "SELLER" | "ADMIN";
 }

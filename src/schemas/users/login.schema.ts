@@ -1,15 +1,9 @@
-//create.schema.ts
+//login.schema.ts
 
 import { z } from "zod";
 
-export const createUserSchema = z.object({
+export const loginUserSchema = z.object({
   body: z.object({
-    fullname: z
-      .string()
-      .trim()
-      .min(3, "Name must be at least 3 characters")
-      .max(100, "Name must be at most 100 characters"),
-
     email: z.string().trim().toLowerCase().email("Invalid email"),
 
     password: z

@@ -1,9 +1,7 @@
 //admin.service.ts
 
 import pool from "../config/db";
-import { SellerStatus } from "../dtos/seller/response.dto";
-import { StoreStatus } from "../dtos/store/response.dto";
-import { UserRole } from "../dtos/user/user.response.dto";
+import { SellerStatus, StoreStatus, UserRole } from "../types/shared/status.js";
 import { ConflictError } from "../errors/conflict-error";
 import { NotFoundError } from "../errors/not-found-error";
 import {
@@ -14,8 +12,16 @@ import {
   getSellerApplication,
 } from "../repositories/admin.repository";
 import { findUser, updateUserRole } from "../repositories/user.repository";
+import { SellerApplicationRow } from "../types/database/admin/admin.row.js";
+import { UserRow } from "../types/database/user/user.row.js";
+import {
+  SellerProfileStatusRow,
+  StoreStatusRow,
+} from "../types/database/admin/admin.row.js";
 
-export const getSellerApplications = async () => {
+export const getSellerApplications = async (): Promise<
+  SellerApplicationRow[]
+> => {
   const applications = await getSellerApplicationsRepository();
   if (!applications || applications.length === 0) {
     throw new NotFoundError("Application not found");
@@ -23,7 +29,9 @@ export const getSellerApplications = async () => {
   return applications;
 };
 
-export const getSellerApplicationsByUserId = async (id: number) => {
+export const getSellerApplicationsByUserId = async (
+  id: number,
+): Promise<SellerApplicationRow> => {
   const application = await getSellerApplicationByUserIdRepository(id);
   if (!application) {
     throw new NotFoundError("Application not found");
@@ -31,7 +39,16 @@ export const getSellerApplicationsByUserId = async (id: number) => {
   return application;
 };
 
-export const approveSellerApplication = async (id: number) => {
+interface ApproveRejectResponse {
+  message: string;
+  user: UserRow | undefined;
+  seller: SellerProfileStatusRow | undefined;
+  store: StoreStatusRow | undefined;
+}
+
+export const approveSellerApplication = async (
+  id: number,
+): Promise<ApproveRejectResponse> => {
   const client = await pool.connect();
 
   try {
@@ -85,7 +102,9 @@ export const approveSellerApplication = async (id: number) => {
   }
 };
 
-export const rejectSellerApplication = async (id: number) => {
+export const rejectSellerApplication = async (
+  id: number,
+): Promise<ApproveRejectResponse> => {
   const client = await pool.connect();
 
   try {

@@ -4,7 +4,7 @@ import { Router } from "express";
 const router = Router();
 import { auth } from "../middlewares/auth.middleware";
 import { authorize } from "../middlewares/authorize.middleware";
-import { UserRole } from "../dtos/user/user.response.dto";
+import { UserRole } from "../types/shared/status.js";
 
 router.get(
   "/",

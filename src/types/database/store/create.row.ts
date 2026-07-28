@@ -1,5 +1,7 @@
 // store.row
 
+import { StoreStatus } from "../../shared/status.js";
+
 export interface StoreRow {
   name: string;
 }
@@ -9,11 +11,4 @@ export interface StoreRowResponse {
   name: string;
   seller_profile_id: number;
   status: StoreStatus;
-}
-
-export enum StoreStatus {
-  PENDING = "PENDING",
-  OPENED = "OPENED",
-  REJECTED = "REJECTED",
-  HIDDEN = "HIDDEN",
 }

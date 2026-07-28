@@ -1,7 +1,7 @@
 //authorize.middleware.ts
 
 import { Request, Response, NextFunction } from "express";
-import { UserRole } from "../dtos/user/user.response.dto";
+import { UserRole } from "../types/shared/status.js";
 import { ForbiddenError } from "../errors/forbidden-error";
 
 export const authorize = (...roles: UserRole[]) => {

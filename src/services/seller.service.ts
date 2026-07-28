@@ -3,7 +3,8 @@
 import pool from "../config/db";
 import { CreateSellerDto } from "../dtos/create-seller.dto";
 import { ResponseSellerDto } from "../dtos/seller/response.dto";
-import { ResponseStoreDto, StoreStatus } from "../dtos/store/response.dto";
+import { ResponseStoreDto } from "../dtos/store/response.dto.js";
+import { StoreStatus } from "../types/shared/status.js";
 import { UserResponseDto } from "../dtos/user/user.response.dto";
 import { ConflictError } from "../errors/conflict-error";
 import { NotFoundError } from "../errors/not-found-error";
@@ -14,10 +15,11 @@ import {
   createStore,
   getSellerStatus,
   deleteSellerProfile,
+  findSellerApplicationByUserId,
 } from "../repositories/seller.repository";
 
 import { CreateSellerRow } from "../types/database/create-seller.row";
-import { SellerStatus } from "../types/database/seller/create.row";
+import { SellerStatus } from "../types/shared/status.js";
 
 export const createSeller = async (userId: number, input: CreateSellerDto) => {
   const client = await pool.connect();
@@ -96,4 +98,27 @@ export const createSeller = async (userId: number, input: CreateSellerDto) => {
   } finally {
     client.release();
   }
+};
+
+// getMySellerApplication
+
+import { SellerApplicationFullRow } from "../types/database/seller/seller-application.row.js";
+
+interface MySellerApplicationResponse {
+  message: string;
+  application: SellerApplicationFullRow;
+}
+
+export const getMySellerApplication = async (
+  id: number,
+): Promise<MySellerApplicationResponse> => {
+  const application = await findSellerApplicationByUserId(id);
+  if (!application) {
+    throw new NotFoundError("Application not found");
+  }
+
+  return {
+    message: "Seller application retrieved successfully",
+    application,
+  };
 };

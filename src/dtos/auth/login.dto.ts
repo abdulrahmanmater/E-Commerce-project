@@ -1,6 +1,7 @@
 // login.dto.ts
 
-import { UserResponseDto, UserRole } from "../user/user.response.dto";
+import { UserResponseDto } from "../user/user.response.dto.js";
+import { UserRole } from "../../types/shared/status.js";
 export interface LoginRequestDto {
   id?: number;
   email: string;

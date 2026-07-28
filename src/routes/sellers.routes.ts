@@ -4,9 +4,12 @@ import { validate } from "../middlewares/validate.middleware";
 import { createSellerSchema } from "../schemas/create-seller.schema";
 import { auth } from "../middlewares/auth.middleware";
 import { authorize } from "../middlewares/authorize.middleware";
-import { UserRole } from "../dtos/user/user.response.dto";
+import { UserRole } from "../types/shared/status.js";
 import { Router } from "express";
-import { createSeller } from "../controllers/seller.controller";
+import {
+  createSeller,
+  getSellerApplicationByUserId,
+} from "../controllers/seller.controller";
 const router = Router();
 
 router.post(
@@ -16,5 +19,6 @@ router.post(
   validate(createSellerSchema),
   createSeller,
 );
+router.get("/me", auth, getSellerApplicationByUserId);
 
 export default router;

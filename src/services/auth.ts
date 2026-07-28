@@ -6,10 +6,17 @@ import { findUserByEmail } from "../repositories/user.repository";
 import { generateAccessToken } from "../utils/jwt";
 import { AppError } from "../errors/app-error";
 import { StatusCodes } from "../constants/status-codes";
+import { UserRow } from "../types/database/user/user.row.js";
+
+interface LoginResponse {
+  message: string;
+  user: UserRow;
+  tokens: { accessToken: string };
+}
 
 //login
 
-export const login = async (user: LoginRequestDto) => {
+export const login = async (user: LoginRequestDto): Promise<LoginResponse> => {
   const existedUser = await findUserByEmail(user.email);
   if (!existedUser) {
     throw new AppError(

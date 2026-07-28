@@ -4,7 +4,7 @@ import pool from "../config/db";
 import { CreateUserDto } from "../dtos/user/create.dto";
 import { UserRow, UserRowWithPassword } from "../types/database/user/user.row";
 import { UpdateUserRow } from "../types/database/user/update-user.row";
-import { UserRole } from "../dtos/user/user.response.dto";
+import { UserRole } from "../types/shared/status.js";
 import { PoolClient } from "pg";
 
 //CreateUser

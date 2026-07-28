@@ -1,15 +1,21 @@
-//seller.repository.ts
+// seller.repository.ts
 
 import { PoolClient } from "pg";
-import { SellerRowResponse } from "../types/database/seller/create.row";
-import { StoreRowResponse } from "../types/database/store/create.row";
-import { UserRow } from "../types/database/user/user.row";
-import { CreateSellerRow } from "../types/database/create-seller.row";
+import { SellerRowResponse } from "../types/database/seller/create.row.js";
+import { StoreRowResponse } from "../types/database/store/create.row.js";
+import { UserRow } from "../types/database/user/user.row.js";
+import { CreateSellerRow } from "../types/database/create-seller.row.js";
+import { SellerApplicationFullRow } from "../types/database/seller/seller-application.row.js";
+import { SellerStatus } from "../types/shared/status.js";
+import pool from "../config/db";
 
 //get seller status
 
-export const getSellerStatus = async (client: PoolClient, id: number) => {
-  const result = await client.query(
+export const getSellerStatus = async (
+  client: PoolClient,
+  id: number,
+): Promise<SellerStatus | undefined> => {
+  const result = await client.query<{ status: SellerStatus }>(
     `
       select status from seller_profiles where user_id = $1
     `,
@@ -105,4 +111,18 @@ export const deleteSellerProfile = async (
     `,
     [userId],
   );
+};
+
+//find seller application by user_id
+
+export const findSellerApplicationByUserId = async (user_id: number) => {
+  const application = await pool.query<SellerApplicationFullRow>(
+    `
+        SELECT u.id, u.full_name, u.email, u.role, sp.national_id, sp.national_id_image, sp.bank_name, s.name AS store_name, sp.status AS seller_status, s.status AS store_status
+            FROM seller_profiles sp inner join users u on u.id = sp.user_id 
+            inner join stores s on s.seller_profile_id =sp.id WHERE user_id = $1
+    `,
+    [user_id],
+  );
+  return application.rows[0];
 };

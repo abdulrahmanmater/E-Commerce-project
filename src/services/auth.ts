@@ -1,22 +1,33 @@
 //login.service.ts
 
-import { LoginRequestDto } from "../dtos/auth/login.dto";
+import {
+  LoginRequestDto,
+  LoginResponseDto,
+  LoginUserResponseDto,
+} from "../dtos/auth/login.dto";
 import { comparePassword } from "../utils/password";
 import { findUserByEmail } from "../repositories/user.repository";
 import { generateAccessToken } from "../utils/jwt";
 import { AppError } from "../errors/app-error";
 import { StatusCodes } from "../constants/status-codes";
-import { UserRow } from "../types/database/user/user.row.js";
 
-interface LoginResponse {
-  message: string;
-  user: UserRow;
-  tokens: { accessToken: string };
-}
+const toLoginUserResponseDto = (user: {
+  id: number;
+  full_name: string;
+  email: string;
+  role: LoginUserResponseDto["role"];
+}): LoginUserResponseDto => ({
+  id: user.id,
+  full_name: user.full_name,
+  email: user.email,
+  role: user.role,
+});
 
 //login
 
-export const login = async (user: LoginRequestDto): Promise<LoginResponse> => {
+export const login = async (
+  user: LoginRequestDto,
+): Promise<LoginResponseDto> => {
   const existedUser = await findUserByEmail(user.email);
   if (!existedUser) {
     throw new AppError(
@@ -38,10 +49,9 @@ export const login = async (user: LoginRequestDto): Promise<LoginResponse> => {
     id: existedUser.id,
     role: existedUser.role,
   });
-  const { password_hash, ...userWithoutPassword } = existedUser;
   return {
     message: "Login successful",
-    user: userWithoutPassword,
+    user: toLoginUserResponseDto(existedUser),
     tokens: {
       accessToken: token,
     },

@@ -12,43 +12,112 @@ import {
   getSellerApplication,
 } from "../repositories/admin.repository";
 import { findUser, updateUserRole } from "../repositories/user.repository";
-import { SellerApplicationRow } from "../types/database/admin/admin.row.js";
-import { UserRow } from "../types/database/user/user.row.js";
 import {
-  SellerProfileStatusRow,
-  StoreStatusRow,
-} from "../types/database/admin/admin.row.js";
+  AdminSellerApplicationResponseDto,
+  AdminSellerStatusResponseDto,
+  AdminStoreStatusResponseDto,
+  AdminUserResponseDto,
+  ApproveRejectSellerApplicationResponseDto,
+} from "../dtos/admin/seller-application.response.dto";
+
+interface AdminSellerApplicationSource {
+  user_id: number;
+  full_name: string;
+  email: string;
+  role: UserRole;
+  national_id: string;
+  national_id_image: string;
+  bank_name: string;
+  store_name: string;
+  seller_status: SellerStatus;
+  store_status: StoreStatus;
+}
+
+const toAdminSellerApplicationResponseDto = (
+  application: AdminSellerApplicationSource,
+): AdminSellerApplicationResponseDto => ({
+  id: application.user_id,
+  full_name: application.full_name,
+  email: application.email,
+  role: application.role,
+  national_id: application.national_id,
+  national_id_image: application.national_id_image,
+  bank_name: application.bank_name,
+  store_name: application.store_name,
+  status: application.seller_status,
+  store_status: application.store_status,
+});
+
+const toAdminUserResponseDto = (
+  user:
+    | {
+        id: number;
+        full_name: string;
+        email: string;
+        role: UserRole;
+      }
+    | undefined,
+): AdminUserResponseDto | undefined =>
+  user && {
+    id: user.id,
+    full_name: user.full_name,
+    email: user.email,
+    role: user.role,
+  };
+
+const toAdminSellerStatusResponseDto = (
+  seller:
+    | {
+        id: number;
+        bank_name: string;
+        status: SellerStatus;
+      }
+    | undefined,
+): AdminSellerStatusResponseDto | undefined =>
+  seller && {
+    id: seller.id,
+    bank_name: seller.bank_name,
+    status: seller.status,
+  };
+
+const toAdminStoreStatusResponseDto = (
+  store:
+    | {
+        id: number;
+        name: string;
+        status: StoreStatus;
+      }
+    | undefined,
+): AdminStoreStatusResponseDto | undefined =>
+  store && {
+    id: store.id,
+    name: store.name,
+    status: store.status,
+  };
 
 export const getSellerApplications = async (): Promise<
-  SellerApplicationRow[]
+  AdminSellerApplicationResponseDto[]
 > => {
   const applications = await getSellerApplicationsRepository();
   if (!applications || applications.length === 0) {
     throw new NotFoundError("Application not found");
   }
-  return applications;
+  return applications.map(toAdminSellerApplicationResponseDto);
 };
 
 export const getSellerApplicationsByUserId = async (
   id: number,
-): Promise<SellerApplicationRow> => {
+): Promise<AdminSellerApplicationResponseDto> => {
   const application = await getSellerApplicationByUserIdRepository(id);
   if (!application) {
     throw new NotFoundError("Application not found");
   }
-  return application;
+  return toAdminSellerApplicationResponseDto(application);
 };
-
-interface ApproveRejectResponse {
-  message: string;
-  user: UserRow | undefined;
-  seller: SellerProfileStatusRow | undefined;
-  store: StoreStatusRow | undefined;
-}
 
 export const approveSellerApplication = async (
   id: number,
-): Promise<ApproveRejectResponse> => {
+): Promise<ApproveRejectSellerApplicationResponseDto> => {
   const client = await pool.connect();
 
   try {
@@ -57,7 +126,7 @@ export const approveSellerApplication = async (
     if (!application) {
       throw new NotFoundError("application not found");
     }
-    if (application.status !== SellerStatus.PENDING) {
+    if (application.seller_status !== SellerStatus.PENDING) {
       throw new ConflictError("Application has already been reviewed");
     }
     const sellerProfileId = application.seller_profile_id;
@@ -90,9 +159,9 @@ export const approveSellerApplication = async (
     await client.query("COMMIT");
     return {
       message: "The application has been approved successfully.",
-      user: updateRole,
-      seller: sellerStatus,
-      store: storeStatus,
+      user: toAdminUserResponseDto(updateRole),
+      seller: toAdminSellerStatusResponseDto(sellerStatus),
+      store: toAdminStoreStatusResponseDto(storeStatus),
     };
   } catch (err) {
     await client.query("ROLLBACK");
@@ -104,7 +173,7 @@ export const approveSellerApplication = async (
 
 export const rejectSellerApplication = async (
   id: number,
-): Promise<ApproveRejectResponse> => {
+): Promise<ApproveRejectSellerApplicationResponseDto> => {
   const client = await pool.connect();
 
   try {
@@ -114,7 +183,7 @@ export const rejectSellerApplication = async (
     if (!application) {
       throw new NotFoundError("application not found");
     }
-    if (application.status !== SellerStatus.PENDING) {
+    if (application.seller_status !== SellerStatus.PENDING) {
       throw new ConflictError("Application has already been reviewed");
     }
 
@@ -140,9 +209,9 @@ export const rejectSellerApplication = async (
     await client.query("COMMIT");
     return {
       message: "The application has been rejected successfully.",
-      user: user,
-      seller: sellerStatus,
-      store: storeStatus,
+      user: toAdminUserResponseDto(user),
+      seller: toAdminSellerStatusResponseDto(sellerStatus),
+      store: toAdminStoreStatusResponseDto(storeStatus),
     };
   } catch (err) {
     await client.query("ROLLBACK");

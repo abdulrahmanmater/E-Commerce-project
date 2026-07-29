@@ -4,19 +4,22 @@ import { PoolClient } from "pg";
 import pool from "../config/db";
 import { SellerStatus, StoreStatus } from "../types/shared/status.js";
 import {
-  SellerApplicationRow,
-  SellerApplicationDetailRow,
-  SellerProfileStatusRow,
-  StoreStatusRow,
+  AdminSellerApplicationByUserIdRow,
+  AdminSellerApplicationRow,
+  LockedAdminUserRow,
+  LockedSellerProfileRow,
+  LockedStoreRow,
+  SellerApplicationDetailsRow,
+  UpdatedSellerProfileStatusRow,
+  UpdatedStoreStatusRow,
 } from "../types/database/admin/admin.row.js";
-import { UserRow } from "../types/database/user/user.row.js";
 
 // get seller applications
 
 export const getSellerApplications = async () => {
-  const applications = await pool.query<SellerApplicationRow>(
+  const applications = await pool.query<AdminSellerApplicationRow>(
     `
-            SELECT  u.id, u.full_name, u.email, u.role, sp.national_id, sp.national_id_image, sp.bank_name, s.name AS store_name, sp.status, s.status AS store_status
+            SELECT u.id AS user_id, u.full_name, u.email, u.role, sp.national_id, sp.national_id_image, sp.bank_name, s.name AS store_name, sp.status AS seller_status, s.status AS store_status
             FROM seller_profiles sp inner join users u on u.id = sp.user_id 
             inner join stores s on s.seller_profile_id =sp.id WHERE sp.status = 'PENDING';
         `,
@@ -27,9 +30,9 @@ export const getSellerApplications = async () => {
 //get seller application by user id
 
 export const getSellerApplicationByUserId = async (id: number) => {
-  const applications = await pool.query<SellerApplicationRow>(
+  const applications = await pool.query<AdminSellerApplicationByUserIdRow>(
     `
-            SELECT  u.id, u.full_name, u.email, u.role, sp.national_id, sp.national_id_image, sp.bank_name, s.name AS store_name, sp.status, s.status AS store_status
+            SELECT u.id AS user_id, u.full_name, u.email, u.role, sp.national_id, sp.national_id_image, sp.bank_name, s.name AS store_name, sp.status AS seller_status, s.status AS store_status
             FROM seller_profiles sp inner join users u on u.id = sp.user_id 
             inner join stores s on s.seller_profile_id =sp.id where u.id = $1 and sp.status = 'PENDING';
         `,
@@ -41,9 +44,9 @@ export const getSellerApplicationByUserId = async (id: number) => {
   return applications.rows[0];
 };
 export const getSellerApplication = async (client: PoolClient, id: number) => {
-  const applications = await client.query<SellerApplicationDetailRow>(
+  const applications = await client.query<SellerApplicationDetailsRow>(
     `
-            SELECT  u.full_name, u.id AS user_id, sp.id AS seller_profile_id, sp.national_id, sp.national_id_image, sp.bank_name, s.name AS store_name, sp.status 
+            SELECT u.full_name AS user_full_name, u.id AS user_id, sp.id AS seller_profile_id, sp.national_id, sp.national_id_image, sp.bank_name, s.name AS store_name, sp.status AS seller_status
             FROM seller_profiles sp inner join users u on u.id = sp.user_id 
             inner join stores s on s.seller_profile_id =sp.id where u.id = $1 for update;
         `,
@@ -60,7 +63,7 @@ export const changeSellerProfileStatus = async (
   seller_id: number,
   status: SellerStatus,
 ) => {
-  const result = await client.query<SellerProfileStatusRow>(
+  const result = await client.query<UpdatedSellerProfileStatusRow>(
     `
     UPDATE seller_profiles
     SET status = $1
@@ -80,7 +83,7 @@ export const changeStoreStatus = async (
   seller_id: number,
   status: StoreStatus,
 ) => {
-  const result = await client.query<StoreStatusRow>(
+  const result = await client.query<UpdatedStoreStatusRow>(
     `
     UPDATE stores
     SET status = $1
@@ -96,14 +99,14 @@ export const changeStoreStatus = async (
 };
 
 export const lockUser = async (client: PoolClient, userId: number) => {
-  const result = await client.query<UserRow>(
+  const result = await client.query<LockedAdminUserRow>(
     `SELECT id, full_name, email, role FROM users WHERE id = $1 FOR UPDATE`,
     [userId],
   );
   return result.rows[0];
 };
 export const lockStore = async (client: PoolClient, sellerId: number) => {
-  const result = await client.query(
+  const result = await client.query<LockedStoreRow>(
     `SELECT * FROM stores WHERE seller_profile_id = $1 FOR UPDATE`,
     [sellerId],
   );
@@ -111,7 +114,7 @@ export const lockStore = async (client: PoolClient, sellerId: number) => {
 };
 
 export const lockSellerProfile = async (client: PoolClient, userId: number) => {
-  const result = await client.query(
+  const result = await client.query<LockedSellerProfileRow>(
     `SELECT * FROM seller_profiles WHERE id = $1 FOR UPDATE`,
     [userId],
   );

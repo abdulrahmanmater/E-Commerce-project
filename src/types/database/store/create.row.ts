@@ -2,11 +2,11 @@
 
 import { StoreStatus } from "../../shared/status.js";
 
-export interface StoreRow {
+export interface CreateStoreData {
   name: string;
 }
 
-export interface StoreRowResponse {
+export interface CreatedStoreRow {
   id: number;
   name: string;
   seller_profile_id: number;

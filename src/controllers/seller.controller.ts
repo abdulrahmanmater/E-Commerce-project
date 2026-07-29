@@ -5,17 +5,25 @@ import {
   createSeller as createSellerService,
   getMySellerApplication,
 } from "../services/seller.service";
+import { CreateSellerDto } from "../dtos/create-seller.dto";
 
 // createSeller
 export const createSeller = async (req: Request, res: Response) => {
-  const id = Number(req.user.id);
-  return res.status(201).json(await createSellerService(id, req.body));
+  return res
+    .status(201)
+    .json(
+      await createSellerService(
+        Number(req.user.id),
+        req.validated!.body as CreateSellerDto,
+      ),
+    );
 };
 
 export const getSellerApplicationByUserId = async (
   req: Request,
   res: Response,
 ) => {
-  const id = Number(req.user.id);
-  return res.status(200).json(await getMySellerApplication(id));
+  return res
+    .status(200)
+    .json(await getMySellerApplication(Number(req.user.id)));
 };

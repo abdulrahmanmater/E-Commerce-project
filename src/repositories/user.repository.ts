@@ -2,14 +2,22 @@
 
 import pool from "../config/db";
 import { CreateUserDto } from "../dtos/user/create.dto";
-import { UserRow, UserRowWithPassword } from "../types/database/user/user.row";
-import { UpdateUserRow } from "../types/database/user/update-user.row";
+import {
+  CreatedUserRow,
+  DeletedUserRow,
+  TransactionUserRow,
+  UpdatedUserRoleRow,
+  UpdatedUserRow,
+  UserByEmailRow,
+  UserByIdRow,
+} from "../types/database/user/user.row";
+import { UpdateUserData } from "../types/database/user/update-user.row";
 import { UserRole } from "../types/shared/status.js";
 import { PoolClient } from "pg";
 
 //CreateUser
 export const createUser = async (user: CreateUserDto) => {
-  const result = await pool.query<UserRow>(
+  const result = await pool.query<CreatedUserRow>(
     `
         Insert into users (full_name, email, password_hash)
         values ($1, $2, $3)
@@ -23,7 +31,7 @@ export const createUser = async (user: CreateUserDto) => {
 //findUserByEmail
 
 export const findUserByEmail = async (email: string) => {
-  const existedUser = await pool.query<UserRowWithPassword>(
+  const existedUser = await pool.query<UserByEmailRow>(
     `
             SELECT id, full_name, email, role, password_hash FROM users WHERE email = $1
         `,
@@ -38,7 +46,7 @@ export const findUserByEmail = async (email: string) => {
 //findUserById
 
 export const findUserById = async (id: number) => {
-  const user = await pool.query<UserRow>(
+  const user = await pool.query<UserByIdRow>(
     `
         SELECT id, full_name, email, role FROM users WHERE id = $1
     `,
@@ -49,7 +57,7 @@ export const findUserById = async (id: number) => {
 
 //findUser in transaction
 export const findUser = async (client: PoolClient, id: number) => {
-  const user = await client.query<UserRow>(
+  const user = await client.query<TransactionUserRow>(
     `
         SELECT id, full_name, email, role FROM users WHERE id = $1
     `,
@@ -62,16 +70,23 @@ export const findUser = async (client: PoolClient, id: number) => {
 
 export const updateUser = async (
   id: number,
-  data: UpdateUserRow,
-): Promise<UserRow | undefined> => {
+  data: UpdateUserData,
+): Promise<UpdatedUserRow | undefined> => {
   const updates: string[] = [];
-  const values: unknown[] = [];
-  Object.entries(data).forEach(([key, value]) => {
-    updates.push(`${key} = $${values.length + 1}`);
-    values.push(value);
-  });
+  const values: (string | number)[] = [];
+  const fields = [
+    { column: "full_name", value: data.full_name },
+    { column: "email", value: data.email },
+  ];
+
+  for (const field of fields) {
+    if (field.value !== undefined) {
+      updates.push(`${field.column} = $${values.length + 1}`);
+      values.push(field.value);
+    }
+  }
   values.push(id);
-  const result = await pool.query<UserRow>(
+  const result = await pool.query<UpdatedUserRow>(
     `
         UPDATE users
         SET ${updates.join(", ")}
@@ -86,8 +101,10 @@ export const updateUser = async (
 
 //delete user
 
-export const deleteUser = async (id: number): Promise<UserRow | undefined> => {
-  const result = await pool.query<UserRow>(
+export const deleteUser = async (
+  id: number,
+): Promise<DeletedUserRow | undefined> => {
+  const result = await pool.query<DeletedUserRow>(
     `delete from users where id = $1 returning id, full_name, email, role`,
     [id],
   );
@@ -101,7 +118,7 @@ export const updateUserRole = async (
   id: number,
   role: UserRole,
 ) => {
-  const result = await client.query<UserRow>(
+  const result = await client.query<UpdatedUserRoleRow>(
     `
         UPDATE users
         SET role = $1

@@ -1,6 +1,7 @@
 // users.controller
 
 import { CreateUserDto } from "../dtos/user/create.dto";
+import { UpdateUserDto } from "../dtos/user/update.dto";
 import {
   createUser as createUserService,
   getCurrentUser as getCurrentUserService,
@@ -19,20 +20,24 @@ export const createUser = async (req: Request, res: Response) => {
 //getCurrentUser
 
 export const getCurrentUser = async (req: Request, res: Response) => {
-  const id = Number(req.user.id);
-  return res.status(200).json(await getCurrentUserService(id));
+  return res.status(200).json(await getCurrentUserService(Number(req.user.id)));
 };
 
 //updateUser
 
 export const updateUser = async (req: Request, res: Response) => {
-  const id = Number(req.user.id);
-  return res.status(200).json(await updateUserService(id, req.body));
+  return res
+    .status(200)
+    .json(
+      await updateUserService(
+        Number(req.user.id),
+        req.validated!.body as UpdateUserDto,
+      ),
+    );
 };
 
 //deleteUser
 
 export const deleteUser = async (req: Request, res: Response) => {
-  const id = Number(req.user.id);
-  return res.status(200).json(await deleteUserService(id));
+  return res.status(200).json(await deleteUserService(Number(req.user.id)));
 };

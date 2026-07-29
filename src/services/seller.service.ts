@@ -1,10 +1,17 @@
 // seller.service.ts
 
 import pool from "../config/db";
-import { CreateSellerDto } from "../dtos/create-seller.dto";
+import {
+  CreateSellerDto,
+  ResponseCreateSellerDto,
+} from "../dtos/create-seller.dto";
 import { ResponseSellerDto } from "../dtos/seller/response.dto";
+import {
+  MySellerApplicationResponseDto,
+  SellerApplicationResponseDto,
+} from "../dtos/seller/seller-application.response.dto";
 import { ResponseStoreDto } from "../dtos/store/response.dto.js";
-import { StoreStatus } from "../types/shared/status.js";
+import { SellerStatus, StoreStatus } from "../types/shared/status.js";
 import { UserResponseDto } from "../dtos/user/user.response.dto";
 import { ConflictError } from "../errors/conflict-error";
 import { NotFoundError } from "../errors/not-found-error";
@@ -19,9 +26,56 @@ import {
 } from "../repositories/seller.repository";
 
 import { CreateSellerRow } from "../types/database/create-seller.row";
-import { SellerStatus } from "../types/shared/status.js";
+import { CreatedSellerProfileRow } from "../types/database/seller/create.row.js";
+import { SellerApplicationDetailsRow } from "../types/database/seller/seller-application.row.js";
+import { CreatedStoreRow } from "../types/database/store/create.row.js";
 
-export const createSeller = async (userId: number, input: CreateSellerDto) => {
+const toUserResponseDto = (user: {
+  id: number;
+  full_name: string;
+  email: string;
+  role: UserResponseDto["role"];
+}): UserResponseDto => ({
+  id: user.id,
+  email: user.email,
+  fullname: user.full_name,
+  role: user.role,
+});
+
+const toSellerApplicationResponseDto = (
+  application: SellerApplicationDetailsRow,
+): SellerApplicationResponseDto => ({
+  id: application.user_id,
+  full_name: application.full_name,
+  email: application.email,
+  role: application.role,
+  national_id: application.national_id,
+  national_id_image: application.national_id_image,
+  bank_name: application.bank_name,
+  store_name: application.store_name,
+  seller_status: application.seller_status,
+  store_status: application.store_status,
+});
+
+const toSellerResponseDto = (
+  seller: CreatedSellerProfileRow,
+): ResponseSellerDto => ({
+  id: seller.id,
+  bankName: seller.bank_name,
+  status: seller.status,
+});
+
+const toStoreResponseDto = (store: CreatedStoreRow): ResponseStoreDto => ({
+  id: store.id,
+  name: store.name,
+  sellerId: store.seller_profile_id,
+  status: store.status,
+});
+
+export const createSeller = async (
+  userId: number,
+  input: CreateSellerDto,
+): Promise<ResponseCreateSellerDto> => {
   const client = await pool.connect();
 
   try {
@@ -66,23 +120,9 @@ export const createSeller = async (userId: number, input: CreateSellerDto) => {
 
     const store = await createStore(client, seller.id, data.store.name);
 
-    const returnedUser: UserResponseDto = {
-      id: user.id,
-      email: user.email,
-      fullname: user.full_name,
-      role: user.role,
-    };
-    const returnedSeller: ResponseSellerDto = {
-      id: seller.id,
-      bankName: seller.bank_name,
-      status: seller.status,
-    };
-    const returnedStore: ResponseStoreDto = {
-      id: store.id,
-      name: store.name,
-      sellerId: store.seller_profile_id,
-      status: store.status,
-    };
+    const returnedUser = toUserResponseDto(user);
+    const returnedSeller = toSellerResponseDto(seller);
+    const returnedStore = toStoreResponseDto(store);
 
     await client.query("COMMIT");
     return {
@@ -100,18 +140,9 @@ export const createSeller = async (userId: number, input: CreateSellerDto) => {
   }
 };
 
-// getMySellerApplication
-
-import { SellerApplicationFullRow } from "../types/database/seller/seller-application.row.js";
-
-interface MySellerApplicationResponse {
-  message: string;
-  application: SellerApplicationFullRow;
-}
-
 export const getMySellerApplication = async (
   id: number,
-): Promise<MySellerApplicationResponse> => {
+): Promise<MySellerApplicationResponseDto> => {
   const application = await findSellerApplicationByUserId(id);
   if (!application) {
     throw new NotFoundError("Application not found");
@@ -119,6 +150,6 @@ export const getMySellerApplication = async (
 
   return {
     message: "Seller application retrieved successfully",
-    application,
+    application: toSellerApplicationResponseDto(application),
   };
 };

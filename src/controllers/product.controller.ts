@@ -7,6 +7,7 @@ import {
   updateProduct as updateProductService,
   deleteProduct as deleteProductService,
   updateProductVisibility as updateProductVisibilityService,
+  getProducts as getProductsService,
   getMyProducts as getMyProductsService,
 } from "../services/product.service";
 import { CreateProductDto } from "../dtos/product/create.dto";
@@ -67,4 +68,10 @@ export const getMyProducts = async (req: Request, res: Response) => {
   console.log(req.user);
   console.log(userId);
   return res.json(await getMyProductsService(userId));
+};
+
+//get all products
+
+export const getProducts = async (req: Request, res: Response) => {
+  return res.json(await getProductsService());
 };

@@ -9,6 +9,7 @@ import {
   deleteProduct as deleteProductRepository,
   updateProductVisibility as updateProductVisibilityRepository,
   getMyProducts as getMyProductsRepository,
+  getProducts as getProductsRepository,
   findProductByStoreIdAndName,
 } from "../repositories/product.repository";
 import { findSellerContextByUserId } from "../repositories/seller.repository";
@@ -245,4 +246,34 @@ export const getMyProducts = async (
   });
 
   return returnedProducts;
+};
+
+// get product public
+
+export const getProducts = async () => {
+  const products = await getProductsRepository();
+  if (products.length === 0) {
+    return {
+      message: "The market has no products yet",
+      products,
+    };
+  }
+  const result = products.map((product) => {
+    return {
+      store: { id: product.store_id, name: product.store_name },
+      product: {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: product.quantity,
+        description: product.description,
+        updatedAt: product.updated_at,
+        createdAt: product.created_at,
+      },
+    };
+  });
+  return {
+    message: "Products retrieved successfully",
+    products: result,
+  };
 };

@@ -155,3 +155,19 @@ export const getMyProducts = async (user_id: number) => {
   );
   return application.rows;
 };
+
+//get all products
+
+export const getProducts = async () => {
+  const result = await pool.query(
+    `
+        select p.id, p.name, p.price, p.quantity, p.description, p.created_at, p.updated_at, 
+        s.id store_id, s.name store_name from products p inner join stores s 
+        on s.id = p.store_id 
+        where p.is_hidden = false and p.deleted_at is null 
+        and s.status = 'OPEN' and s.deleted_at is null 
+        ORDER BY p.updated_at DESC
+    `,
+  );
+  return result.rows;
+};

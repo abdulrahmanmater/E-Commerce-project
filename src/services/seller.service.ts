@@ -22,7 +22,7 @@ import {
   createStore,
   getSellerStatus,
   deleteSellerProfile,
-  findSellerApplicationByUserId,
+  findSellerContextByUserId,
 } from "../repositories/seller.repository";
 
 import { CreateSellerRow } from "../types/database/create-seller.row";
@@ -143,7 +143,7 @@ export const createSeller = async (
 export const getMySellerApplication = async (
   id: number,
 ): Promise<MySellerApplicationResponseDto> => {
-  const application = await findSellerApplicationByUserId(id);
+  const application = await findSellerContextByUserId(id);
   if (!application) {
     throw new NotFoundError("Application not found");
   }

@@ -1,10 +1,6 @@
 // seller-application.row.ts — Row types for seller repository queries
 
-import {
-  SellerStatus,
-  StoreStatus,
-  UserRole,
-} from "../../shared/status.js";
+import { SellerStatus, StoreStatus, UserRole } from "../../shared/status.js";
 
 export interface SellerStatusRow {
   status: SellerStatus;
@@ -26,6 +22,7 @@ export interface SellerApplicationDetailsRow {
   national_id: string;
   national_id_image: string;
   bank_name: string;
+  store_id: number;
   store_name: string;
   seller_status: SellerStatus;
   store_status: StoreStatus;

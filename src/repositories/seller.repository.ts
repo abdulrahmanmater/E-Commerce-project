@@ -118,10 +118,10 @@ export const deleteSellerProfile = async (
 
 //find seller application by user_id
 
-export const findSellerApplicationByUserId = async (user_id: number) => {
+export const findSellerContextByUserId = async (user_id: number) => {
   const application = await pool.query<SellerApplicationDetailsRow>(
     `
-        SELECT u.id AS user_id, u.full_name, u.email, u.role, sp.national_id, sp.national_id_image, sp.bank_name, s.name AS store_name, sp.status AS seller_status, s.status AS store_status
+        SELECT u.id AS user_id, u.full_name, u.email, u.role, sp.national_id, sp.national_id_image, sp.bank_name, s.id store_id, s.name AS store_name, sp.status AS seller_status, s.status AS store_status
             FROM seller_profiles sp inner join users u on u.id = sp.user_id 
             inner join stores s on s.seller_profile_id =sp.id WHERE user_id = $1
     `,

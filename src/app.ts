@@ -3,9 +3,10 @@
 import indexRoutes from "./routes/index.routes";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/users.routes";
-import productRoute from "./routes/products.routes";
+import productRoutes from "./routes/products.routes";
 import sellerRoutes from "./routes/sellers.routes";
 import adminRoutes from "./routes/admin.routes";
+import storeRoutes from "./routes/store.routes";
 import { globalErrorHandler } from "./middlewares/global-error-handler";
 import express from "express";
 const app = express();
@@ -17,7 +18,8 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/sellers", sellerRoutes);
 app.use("/admin", adminRoutes);
-app.use("/products", productRoute);
+app.use("/products", productRoutes);
+app.use("/stores", storeRoutes);
 
 app.use(globalErrorHandler);
 

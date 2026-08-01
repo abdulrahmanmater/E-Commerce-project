@@ -11,6 +11,20 @@ export interface ProductResponseDto {
   createdAt: Date;
 }
 
+export interface MyProductsResponseDto {
+  storeId: number;
+  storeName: string;
+  storeStatus: StoreStatus;
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  description: string;
+  isHidden: boolean;
+  updatedAt: Date;
+  createdAt: Date;
+}
+
 export interface ProductStoreResponseDto {
   id: number;
   name: string;

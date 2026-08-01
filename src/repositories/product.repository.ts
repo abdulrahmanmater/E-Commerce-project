@@ -9,6 +9,7 @@ import {
   ProductByStoreIdAndNameRow,
   DeletedProductRow,
   UpdateProductData,
+  MyProductRow,
 } from "../types/database/product/product.row";
 
 // get product by id
@@ -134,4 +135,23 @@ export const updateProductVisibility = async (
     [productId, isHidden.isHidden],
   );
   return result.rows[0];
+};
+
+// get my products
+
+export const getMyProducts = async (user_id: number) => {
+  const application = await pool.query<MyProductRow>(
+    `
+        SELECT s.name store_name, s.status store_status, s.id store_id,
+        p.id, p.name, p.price, p.quantity, p.description, p.is_hidden, p.updated_at, p.created_at
+        FROM users u
+        INNER JOIN seller_profiles sp ON sp.user_id = u.id
+        INNER JOIN stores s ON s.seller_profile_id = sp.id
+        INNER JOIN products p ON p.store_id = s.id
+        WHERE u.id = $1
+        AND p.deleted_at IS NULL 
+    `,
+    [user_id],
+  );
+  return application.rows;
 };

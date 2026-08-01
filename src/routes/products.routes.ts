@@ -7,6 +7,7 @@ import {
   addProduct,
   updateProduct,
   deleteProduct,
+  getMyProducts,
 } from "../controllers/product.controller";
 import { auth } from "../middlewares/auth.middleware";
 import { authorize } from "../middlewares/authorize.middleware";
@@ -17,6 +18,7 @@ import { updateProductSchema } from "../schemas/products/update.product.schema";
 import { updateProductVisibilitySchema } from "../schemas/products/visibility.schema";
 import { updateProductVisibility } from "../controllers/product.controller";
 
+router.get("/me", auth, authorize(UserRole.SELLER), getMyProducts);
 router.get("/:productId", auth, getProductById);
 router.post(
   "/",
@@ -41,5 +43,4 @@ router.patch(
   updateProductVisibility,
 );
 
-// GET /stores/:storeId/products → مين؟
 export default router;

@@ -8,6 +8,7 @@ import {
   updateProduct as updateProductRepository,
   deleteProduct as deleteProductRepository,
   updateProductVisibility as updateProductVisibilityRepository,
+  getMyProducts as getMyProductsRepository,
   findProductByStoreIdAndName,
 } from "../repositories/product.repository";
 import { findSellerContextByUserId } from "../repositories/seller.repository";
@@ -21,6 +22,7 @@ import {
   ProductStoreResponseDto,
   UpdatedProductResponseDto,
   DeletedProductResponseDto,
+  MyProductsResponseDto,
 } from "../dtos/product/response.dto";
 import {
   ProductByIdRow,
@@ -213,4 +215,34 @@ export const updateProductVisibility = async (
     message: "Product visibility updated successfully",
     product: toProductDetailsResponseDto(updatedProduct!),
   };
+};
+
+// get my products
+
+export const getMyProducts = async (
+  userId: number,
+): Promise<MyProductsResponseDto[]> => {
+  const sellerContext = await findSellerContextByUserId(userId);
+
+  if (!sellerContext) {
+    throw new NotFoundError("Seller profile not found.");
+  }
+  const products = await getMyProductsRepository(userId);
+  const returnedProducts = products.map((product) => {
+    return {
+      storeId: product.store_id,
+      storeStatus: product.store_status,
+      storeName: product.store_name,
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: product.quantity,
+      description: product.description,
+      isHidden: product.is_hidden,
+      updatedAt: product.updated_at,
+      createdAt: product.created_at,
+    };
+  });
+
+  return returnedProducts;
 };

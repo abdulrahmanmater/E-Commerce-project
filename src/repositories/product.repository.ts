@@ -1,7 +1,12 @@
 // product.repository
 
 import pool from "../config/db";
+import {
+  allowedSorting,
+  allowedSortOrders,
+} from "../constants/allowed-sorting";
 import { CreateProductDto } from "../dtos/product/create.dto";
+import { QueryDto } from "../dtos/product/query.dto";
 import {
   ProductByIdRow,
   CreatedProductRow,
@@ -10,6 +15,7 @@ import {
   DeletedProductRow,
   UpdateProductData,
   MyProductRow,
+  MyProductRowWithoutStoreStatus,
 } from "../types/database/product/product.row";
 
 // get product by id
@@ -139,35 +145,217 @@ export const updateProductVisibility = async (
 
 // get my products
 
-export const getMyProducts = async (user_id: number) => {
-  const application = await pool.query<MyProductRow>(
-    `
-        SELECT s.name store_name, s.status store_status, s.id store_id,
+export const getMyProducts = async (userId: number, query: QueryDto) => {
+  let queryStatement = `SELECT s.name store_name, s.status store_status, s.id store_id,
         p.id, p.name, p.price, p.quantity, p.description, p.is_hidden, p.updated_at, p.created_at
-        FROM users u
+        FROM users u 
         INNER JOIN seller_profiles sp ON sp.user_id = u.id
         INNER JOIN stores s ON s.seller_profile_id = sp.id
-        INNER JOIN products p ON p.store_id = s.id
-        WHERE u.id = $1
-        AND p.deleted_at IS NULL 
-    `,
-    [user_id],
-  );
-  return application.rows;
+        INNER JOIN products p ON p.store_id = s.id `;
+  const {
+    page,
+    limit,
+    category,
+    isHidden,
+    minPrice,
+    maxPrice,
+    sorting,
+    sortOrder,
+  } = query;
+  const sortColumn = allowedSorting[sorting];
+  const sortOrderColumn = allowedSortOrders[sortOrder];
+  const offset = (page - 1) * limit;
+  const conditions: string[] = [];
+  const values: (string | number | boolean)[] = [userId, limit, offset];
+  if (category) {
+    values.push(category);
+
+    conditions.push(`
+      EXISTS (
+        SELECT 1
+        FROM product_categories pc
+        INNER JOIN categories c
+          ON c.id = pc.category_id
+        WHERE pc.product_id = p.id
+          AND c.name = $${values.length}
+      )
+    `);
+  }
+  if (isHidden !== undefined) {
+    values.push(isHidden);
+    conditions.push(`p.is_hidden = $${values.length}`);
+  }
+  if (minPrice !== undefined) {
+    values.push(minPrice);
+    conditions.push(`p.price >= $${values.length}`);
+  }
+  if (maxPrice !== undefined) {
+    values.push(maxPrice);
+    conditions.push(`p.price <= $${values.length}`);
+  }
+  const whereClause =
+    conditions.length > 0 ? `and ${conditions.join(" and ")}` : "";
+  queryStatement += `WHERE u.id = $1
+        AND p.deleted_at IS NULL ${whereClause}
+        ORDER BY ${sortColumn} ${sortOrderColumn}, p.id ASC limit $2 offset $3;`;
+  const result = await pool.query<MyProductRow>(queryStatement, [...values]);
+  return result.rows;
+};
+
+// count my products
+
+export const countMyProducts = async (userId: number, query: QueryDto) => {
+  const { category, isHidden, minPrice, maxPrice } = query;
+  let queryStatement = `select COUNT(DISTINCT p.id)         
+    FROM users u 
+        INNER JOIN seller_profiles sp ON sp.user_id = u.id
+        INNER JOIN stores s ON s.seller_profile_id = sp.id
+        INNER JOIN products p ON p.store_id = s.id `;
+  const conditions: string[] = [];
+  const values: (string | number | boolean)[] = [userId];
+  if (category) {
+    values.push(category);
+
+    conditions.push(`
+      EXISTS (
+        SELECT 1
+        FROM product_categories pc
+        INNER JOIN categories c
+          ON c.id = pc.category_id
+        WHERE pc.product_id = p.id
+          AND c.name = $${values.length}
+      )
+    `);
+  }
+  if (isHidden !== undefined) {
+    values.push(isHidden);
+    conditions.push(`p.is_hidden = $${values.length}`);
+  }
+  if (minPrice !== undefined) {
+    values.push(minPrice);
+    conditions.push(`p.price >= $${values.length}`);
+  }
+  if (maxPrice !== undefined) {
+    values.push(maxPrice);
+    conditions.push(`p.price <= $${values.length}`);
+  }
+  const whereClause =
+    conditions.length > 0 ? `and ${conditions.join(" and ")}` : "";
+  queryStatement += ` WHERE u.id = $1 and p.deleted_at is null ${whereClause};`;
+  const result = await pool.query<{ count: string }>(queryStatement, [
+    ...values,
+  ]);
+  const totalItems = Number(result.rows[0].count);
+  return { totalItems };
+};
+
+//count all products
+
+export const countAllProducts = async (query: QueryDto) => {
+  const { category, minPrice, maxPrice } = query;
+  let queryStatement = `    select COUNT(DISTINCT p.id)         
+    FROM 
+      products p 
+      INNER JOIN stores s ON p.store_id = s.id `;
+  const conditions: string[] = [];
+  const values: (string | number)[] = [];
+  if (category) {
+    values.push(category);
+
+    conditions.push(`
+      EXISTS (
+        SELECT 1
+        FROM product_categories pc
+        INNER JOIN categories c
+          ON c.id = pc.category_id
+        WHERE pc.product_id = p.id
+          AND c.name = $${values.length}
+      )
+    `);
+  }
+  if (minPrice !== undefined) {
+    values.push(minPrice);
+    conditions.push(`p.price >= $${values.length}`);
+  }
+  if (maxPrice !== undefined) {
+    values.push(maxPrice);
+    conditions.push(`p.price <= $${values.length}`);
+  }
+  const whereClause =
+    conditions.length > 0 ? `and ${conditions.join(" and ")}` : "";
+  queryStatement += `where p.is_hidden = false and p.deleted_at is null 
+        and s.status = 'OPEN' and s.deleted_at is null ${whereClause}`;
+  const result = await pool.query<{ count: string }>(queryStatement, [
+    ...values,
+  ]);
+  const totalItems = Number(result.rows[0].count);
+  return { totalItems };
 };
 
 //get all products
 
-export const getProducts = async () => {
-  const result = await pool.query(
-    `
-        select p.id, p.name, p.price, p.quantity, p.description, p.created_at, p.updated_at, 
-        s.id store_id, s.name store_name from products p inner join stores s 
-        on s.id = p.store_id 
+export const getProducts = async (query: QueryDto) => {
+  const { page, limit, category, minPrice, maxPrice, sorting, sortOrder } =
+    query;
+  let queryStatement = `select p.id, p.name, p.price, p.quantity, p.description, p.created_at, p.updated_at, 
+        s.id store_id, s.name store_name
+        from products p 
+        inner join stores s 
+        on s.id = p.store_id `;
+  const sortColumn = allowedSorting[sorting];
+  const sortOrderColumn = allowedSortOrders[sortOrder];
+
+  const offset = (page - 1) * limit;
+  const conditions: string[] = [];
+  const values: (string | number | boolean)[] = [limit, offset];
+
+  if (category) {
+    values.push(category);
+
+    conditions.push(`
+      EXISTS (
+        SELECT 1
+        FROM product_categories pc
+        INNER JOIN categories c
+          ON c.id = pc.category_id
+        WHERE pc.product_id = p.id
+          AND c.name = $${values.length}
+      )
+    `);
+  }
+  if (minPrice !== undefined) {
+    values.push(minPrice);
+    conditions.push(`p.price >= $${values.length}`);
+  }
+  if (maxPrice !== undefined) {
+    values.push(maxPrice);
+    conditions.push(`p.price <= $${values.length}`);
+  }
+  const whereClause =
+    conditions.length > 0 ? `and ${conditions.join(" and ")}` : "";
+
+  queryStatement += `
         where p.is_hidden = false and p.deleted_at is null 
-        and s.status = 'OPEN' and s.deleted_at is null 
-        ORDER BY p.updated_at DESC
-    `,
+        and s.status = 'OPEN' and s.deleted_at is null ${whereClause} 
+        ORDER BY ${sortColumn} ${sortOrderColumn}, p.id ASC limit $1 offset $2;
+    `;
+
+  const result = await pool.query<MyProductRowWithoutStoreStatus>(
+    queryStatement,
+    [...values],
   );
+  console.log(...values);
+  console.log(whereClause);
   return result.rows;
 };
+
+//get categories
+
+// export const getCategories = async () => {
+//   const result = await pool.query(
+//     `
+//         select name from categories;
+//     `,
+//   );
+//   return result.rows;
+// };

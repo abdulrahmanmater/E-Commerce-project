@@ -12,6 +12,7 @@ import {
 } from "../services/product.service";
 import { CreateProductDto } from "../dtos/product/create.dto";
 import { UpdateProductDto } from "../dtos/product/update.dto";
+import { QueryDto } from "../dtos/product/query.dto";
 
 // get product by id
 
@@ -64,14 +65,15 @@ export const updateProductVisibility = async (req: Request, res: Response) => {
 //get my products
 
 export const getMyProducts = async (req: Request, res: Response) => {
+  const query = req.validated!.query as QueryDto;
   const userId = Number(req.user.id);
-  console.log(req.user);
-  console.log(userId);
-  return res.json(await getMyProductsService(userId));
+  return res.json(await getMyProductsService(userId, query));
 };
 
 //get all products
 
 export const getProducts = async (req: Request, res: Response) => {
-  return res.json(await getProductsService());
+  const query = req.validated!.query as QueryDto;
+  console.log(query);
+  return res.json(await getProductsService(query));
 };

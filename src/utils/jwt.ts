@@ -9,7 +9,7 @@ if (!JWT_SECRET) {
   throw new Error("JWT_SECRET is not defined");
 }
 export const generateAccessToken = (payload: TokenPayload) => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "15m" });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "30m" });
 };
 
 export const verifyAccessToken = (token: string): TokenPayload => {

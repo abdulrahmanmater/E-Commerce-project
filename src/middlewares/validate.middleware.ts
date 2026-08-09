@@ -13,10 +13,15 @@ type RequestSchema = z.ZodObject<{
 export const validate =
   (schema: RequestSchema) =>
   (req: Request, res: Response, next: NextFunction) => {
-    const result = schema.safeParse({
+    console.log({
       body: req.body,
       params: req.params,
       query: req.query,
+    });
+    const result = schema.safeParse({
+      body: req.body ?? {},
+      params: req.params ?? {},
+      query: req.query ?? {},
     });
 
     if (!result.success) {

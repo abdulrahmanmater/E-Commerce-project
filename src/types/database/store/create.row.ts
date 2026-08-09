@@ -12,3 +12,18 @@ export interface CreatedStoreRow {
   seller_profile_id: number;
   status: StoreStatus;
 }
+export interface StoreRow {
+  id: number;
+  name: string;
+  status: StoreStatus;
+}
+
+export interface StoreProductRow {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  description: string;
+  created_at: Date;
+  updated_at: Date;
+}

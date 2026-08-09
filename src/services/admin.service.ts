@@ -99,7 +99,7 @@ export const getSellerApplications = async (): Promise<
   AdminSellerApplicationResponseDto[]
 > => {
   const applications = await getSellerApplicationsRepository();
-  if (!applications || applications.length === 0) {
+  if (!applications) {
     throw new NotFoundError("Application not found");
   }
   return applications.map(toAdminSellerApplicationResponseDto);

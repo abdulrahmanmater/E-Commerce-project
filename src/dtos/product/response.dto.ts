@@ -12,17 +12,23 @@ export interface ProductResponseDto {
 }
 
 export interface MyProductsResponseDto {
-  storeId: number;
-  storeName: string;
-  storeStatus: StoreStatus;
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  description: string;
-  isHidden: boolean;
-  updatedAt: Date;
-  createdAt: Date;
+  products: {
+    storeId: number;
+    storeName: string;
+    storeStatus: StoreStatus;
+    id: number;
+    name: string;
+    price: number;
+    quantity: number;
+    description: string;
+    isHidden: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }[];
+  pagination: {
+    totalItems: number;
+    totalPages: number;
+  };
 }
 
 export interface ProductStoreResponseDto {

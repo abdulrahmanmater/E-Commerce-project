@@ -18,8 +18,15 @@ import { UserRole } from "../types/shared/status";
 import { updateProductSchema } from "../schemas/products/update.product.schema";
 import { updateProductVisibilitySchema } from "../schemas/products/visibility.schema";
 import { updateProductVisibility } from "../controllers/product.controller";
+import { querySchema } from "../schemas/shared/query.schema";
 
-router.get("/me", auth, authorize(UserRole.SELLER), getMyProducts);
+router.get(
+  "/me",
+  auth,
+  authorize(UserRole.SELLER),
+  validate(querySchema),
+  getMyProducts,
+);
 router.get("/:productId", getProductById);
 router.post(
   "/",
@@ -43,6 +50,6 @@ router.patch(
   validate(updateProductVisibilitySchema),
   updateProductVisibility,
 );
-router.get("/", getProducts);
+router.get("/", validate(querySchema), getProducts);
 
 export default router;

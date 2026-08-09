@@ -28,6 +28,19 @@ export interface MyProductRow {
   created_at: Date;
 }
 
+export interface MyProductRowWithoutStoreStatus {
+  store_name: string;
+  store_id: number;
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  description: string;
+  is_hidden: boolean;
+  updated_at: Date;
+  created_at: Date;
+}
+
 export interface CreatedProductRow {
   id: number;
   name: string;

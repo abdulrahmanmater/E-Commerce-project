@@ -11,6 +11,8 @@ import {
   getMyProducts as getMyProductsRepository,
   getProducts as getProductsRepository,
   findProductByStoreIdAndName,
+  countMyProducts,
+  countAllProducts,
 } from "../repositories/product.repository";
 import { findSellerContextByUserId } from "../repositories/seller.repository";
 import { StoreStatus } from "../types/shared/status";
@@ -33,6 +35,7 @@ import {
 } from "../types/database/product/product.row";
 import { UpdateProductData } from "../types/database/product/product.row";
 import { SellerApplicationDetailsRow } from "../types/database/seller/seller-application.row.js";
+import { QueryDto } from "../dtos/product/query.dto";
 
 const toProductResponseDto = (product: ProductByIdRow): ProductResponseDto => ({
   storeName: product.store_name,
@@ -222,43 +225,75 @@ export const updateProductVisibility = async (
 
 export const getMyProducts = async (
   userId: number,
-): Promise<MyProductsResponseDto[]> => {
+  query: QueryDto,
+): Promise<MyProductsResponseDto> => {
+  const limit = query.limit;
+  const page = query.page;
+
   const sellerContext = await findSellerContextByUserId(userId);
 
   if (!sellerContext) {
     throw new NotFoundError("Seller profile not found.");
   }
-  const products = await getMyProductsRepository(userId);
+
+  const products = await getMyProductsRepository(userId, query);
   const returnedProducts = products.map((product) => {
     return {
       storeId: product.store_id,
-      storeStatus: product.store_status,
       storeName: product.store_name,
+      storeStatus: product.store_status,
       id: product.id,
       name: product.name,
       price: product.price,
       quantity: product.quantity,
       description: product.description,
       isHidden: product.is_hidden,
-      updatedAt: product.updated_at,
       createdAt: product.created_at,
+      updatedAt: product.updated_at,
     };
   });
 
-  return returnedProducts;
+  const { totalItems } = await countMyProducts(userId, query);
+  const totalPages = Math.ceil(totalItems / limit);
+  const hasNextPage = page < totalPages;
+  const hasPreviousPage = page > 1;
+  const returnedPagination = {
+    totalItems: totalItems,
+    totalPages: totalPages,
+    page: page,
+    limit: limit,
+    hasNextPage,
+    hasPreviousPage,
+  };
+  return {
+    products: returnedProducts,
+    pagination: returnedPagination,
+  };
 };
 
 // get product public
 
-export const getProducts = async () => {
-  const products = await getProductsRepository();
+export const getProducts = async (query: QueryDto) => {
+  const products = await getProductsRepository(query);
+  const { totalItems } = await countAllProducts(query);
+  const totalPages = Math.ceil(totalItems / query.limit);
+  const hasNextPage = query.page < totalPages;
+  const hasPreviousPage = query.page > 1;
+  const returnedPagination = {
+    totalItems: totalItems,
+    totalPages: totalPages,
+    page: query.page,
+    limit: query.limit,
+    hasNextPage,
+    hasPreviousPage,
+  };
   if (products.length === 0) {
     return {
-      message: "The market has no products yet",
       products,
+      pagination: returnedPagination,
     };
   }
-  const result = products.map((product) => {
+  const mappedProducts = products.map((product) => {
     return {
       store: { id: product.store_id, name: product.store_name },
       product: {
@@ -273,7 +308,7 @@ export const getProducts = async () => {
     };
   });
   return {
-    message: "Products retrieved successfully",
-    products: result,
+    products: mappedProducts,
+    pagination: returnedPagination,
   };
 };

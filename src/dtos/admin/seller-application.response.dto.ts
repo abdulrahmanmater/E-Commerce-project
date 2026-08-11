@@ -1,28 +1,40 @@
-import { SellerStatus, StoreStatus, UserRole } from "../../types/shared/status.js";
+//response.dto.ts
 
+import {
+  SellerStatus,
+  StoreStatus,
+  UserRole,
+} from "../../types/shared/status.js";
+
+export interface ResponseStoreDto {
+  id: number;
+  name: string;
+  sellerId: number;
+  status: StoreStatus;
+}
 export interface AdminSellerApplicationResponseDto {
   id: number;
-  full_name: string;
+  fullName: string;
   email: string;
   role: UserRole;
-  national_id: string;
-  national_id_image: string;
-  bank_name: string;
-  store_name: string;
+  nationalId: string;
+  nationalIdImage: string;
+  bankName: string;
+  storeName: string;
   status: SellerStatus;
-  store_status: StoreStatus;
+  storeStatus: StoreStatus;
 }
 
 export interface AdminUserResponseDto {
   id: number;
-  full_name: string;
+  fullName: string;
   email: string;
   role: UserRole;
 }
 
 export interface AdminSellerStatusResponseDto {
   id: number;
-  bank_name: string;
+  bankName: string;
   status: SellerStatus;
 }
 

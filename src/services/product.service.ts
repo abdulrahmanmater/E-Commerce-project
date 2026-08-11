@@ -34,7 +34,7 @@ import {
   DeletedProductRow,
 } from "../types/database/product/product.row";
 import { UpdateProductData } from "../types/database/product/product.row";
-import { SellerApplicationDetailsRow } from "../types/database/seller/seller-application.row.js";
+import { SellerApplicationDetailsRow } from "../types/database/admin/admin.row";
 import { QueryDto } from "../dtos/product/query.dto";
 
 const toProductResponseDto = (product: ProductByIdRow): ProductResponseDto => ({
@@ -75,12 +75,7 @@ export const getProductById = async (
   if (!product) {
     throw new NotFoundError("The product not found");
   }
-  if (product.store_status !== "OPEN") {
-    throw new ConflictError("The store is not open");
-  }
-  if (product.is_hidden) {
-    throw new ConflictError("The product is hidden");
-  }
+
   return toProductResponseDto(product);
 };
 

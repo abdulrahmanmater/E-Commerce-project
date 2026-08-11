@@ -8,7 +8,7 @@ import {
   getProductsByStoreId as getProductsByStoreIdRepository,
   countStoreProducts,
 } from "../repositories/store.repository";
-import { StoreProductsResponseDto } from "../types/database/store/response.dto";
+import { StoreProductsResponseDto } from "../dtos/store/response.dto";
 import { StoreStatus } from "../types/shared/status";
 
 // get products by store id

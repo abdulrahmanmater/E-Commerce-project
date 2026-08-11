@@ -6,12 +6,9 @@ import {
   ResponseCreateSellerDto,
 } from "../dtos/create-seller.dto";
 import { ResponseSellerDto } from "../dtos/seller/response.dto";
-import {
-  MySellerApplicationResponseDto,
-  SellerApplicationResponseDto,
-} from "../dtos/seller/seller-application.response.dto";
+import { MySellerApplicationResponseDto } from "../dtos/seller/seller-application.response.dto";
 import { ResponseStoreDto } from "../dtos/store/response.dto.js";
-import { SellerStatus, StoreStatus } from "../types/shared/status.js";
+import { SellerStatus } from "../types/shared/status.js";
 import { UserResponseDto } from "../dtos/user/user.response.dto";
 import { ConflictError } from "../errors/conflict-error";
 import { NotFoundError } from "../errors/not-found-error";
@@ -27,8 +24,9 @@ import {
 
 import { CreateSellerRow } from "../types/database/create-seller.row";
 import { CreatedSellerProfileRow } from "../types/database/seller/create.row.js";
-import { SellerApplicationDetailsRow } from "../types/database/seller/seller-application.row.js";
+import { SellerApplicationDetailsDto } from "../dtos/seller/seller-application.response.dto";
 import { CreatedStoreRow } from "../types/database/store/create.row.js";
+import { SellerApplicationResponseRow } from "../types/database/seller/seller-application.row";
 
 const toUserResponseDto = (user: {
   id: number;
@@ -38,23 +36,24 @@ const toUserResponseDto = (user: {
 }): UserResponseDto => ({
   id: user.id,
   email: user.email,
-  fullname: user.full_name,
+  fullName: user.full_name,
   role: user.role,
 });
 
 const toSellerApplicationResponseDto = (
-  application: SellerApplicationDetailsRow,
-): SellerApplicationResponseDto => ({
-  id: application.user_id,
-  full_name: application.full_name,
+  application: SellerApplicationResponseRow,
+): SellerApplicationDetailsDto => ({
+  userId: application.user_id,
+  fullName: application.full_name,
   email: application.email,
   role: application.role,
-  national_id: application.national_id,
-  national_id_image: application.national_id_image,
-  bank_name: application.bank_name,
-  store_name: application.store_name,
-  seller_status: application.seller_status,
-  store_status: application.store_status,
+  nationalId: application.national_id,
+  nationalIdImage: application.national_id_image,
+  bankName: application.bank_name,
+  storeId: application.store_id,
+  storeName: application.store_name,
+  sellerStatus: application.seller_status,
+  storeStatus: application.store_status,
 });
 
 const toSellerResponseDto = (

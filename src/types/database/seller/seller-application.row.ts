@@ -5,7 +5,6 @@ import { SellerStatus, StoreStatus, UserRole } from "../../shared/status.js";
 export interface SellerStatusRow {
   status: SellerStatus;
 }
-
 export interface LockedSellerUserRow {
   id: number;
   full_name: string;
@@ -14,7 +13,7 @@ export interface LockedSellerUserRow {
 }
 
 /** Row from findSellerApplicationByUserId JOIN query */
-export interface SellerApplicationDetailsRow {
+export interface SellerApplicationResponseRow {
   user_id: number;
   full_name: string;
   email: string;
@@ -22,8 +21,8 @@ export interface SellerApplicationDetailsRow {
   national_id: string;
   national_id_image: string;
   bank_name: string;
-  store_id: number;
   store_name: string;
+  store_id: number;
   seller_status: SellerStatus;
   store_status: StoreStatus;
 }

@@ -17,7 +17,7 @@ export interface LoginResponseDto {
 
 export interface LoginUserResponseDto {
   id: number;
-  full_name: string;
+  fullName: string;
   email: string;
   role: UserRole;
 }

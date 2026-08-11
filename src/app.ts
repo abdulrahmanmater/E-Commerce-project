@@ -7,6 +7,7 @@ import productRoutes from "./routes/products.routes";
 import sellerRoutes from "./routes/sellers.routes";
 import adminRoutes from "./routes/admin.routes";
 import storeRoutes from "./routes/store.routes";
+import cartRoutes from "./routes/cart.routes";
 import { globalErrorHandler } from "./middlewares/global-error-handler";
 import express from "express";
 const app = express();
@@ -20,6 +21,7 @@ app.use("/sellers", sellerRoutes);
 app.use("/admin", adminRoutes);
 app.use("/products", productRoutes);
 app.use("/stores", storeRoutes);
+app.use("/carts", cartRoutes);
 
 app.use(globalErrorHandler);
 

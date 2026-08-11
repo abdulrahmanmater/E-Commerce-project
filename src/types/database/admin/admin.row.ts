@@ -38,8 +38,10 @@ export interface SellerApplicationDetailsRow {
   national_id: string;
   national_id_image: string;
   bank_name: string;
+  store_id: number;
   store_name: string;
   seller_status: SellerStatus;
+  store_status: StoreStatus;
 }
 
 /** RETURNING row from changeSellerProfileStatus */

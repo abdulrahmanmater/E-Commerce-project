@@ -20,7 +20,7 @@ import {
   ApproveRejectSellerApplicationResponseDto,
 } from "../dtos/admin/seller-application.response.dto";
 
-interface AdminSellerApplicationSource {
+interface AdminSellerApplicationSourceRow {
   user_id: number;
   full_name: string;
   email: string;
@@ -34,18 +34,18 @@ interface AdminSellerApplicationSource {
 }
 
 const toAdminSellerApplicationResponseDto = (
-  application: AdminSellerApplicationSource,
+  application: AdminSellerApplicationSourceRow,
 ): AdminSellerApplicationResponseDto => ({
   id: application.user_id,
-  full_name: application.full_name,
+  fullName: application.full_name,
   email: application.email,
   role: application.role,
-  national_id: application.national_id,
-  national_id_image: application.national_id_image,
-  bank_name: application.bank_name,
-  store_name: application.store_name,
+  nationalId: application.national_id,
+  nationalIdImage: application.national_id_image,
+  bankName: application.bank_name,
+  storeName: application.store_name,
   status: application.seller_status,
-  store_status: application.store_status,
+  storeStatus: application.store_status,
 });
 
 const toAdminUserResponseDto = (
@@ -60,7 +60,7 @@ const toAdminUserResponseDto = (
 ): AdminUserResponseDto | undefined =>
   user && {
     id: user.id,
-    full_name: user.full_name,
+    fullName: user.full_name,
     email: user.email,
     role: user.role,
   };
@@ -76,7 +76,7 @@ const toAdminSellerStatusResponseDto = (
 ): AdminSellerStatusResponseDto | undefined =>
   seller && {
     id: seller.id,
-    bank_name: seller.bank_name,
+    bankName: seller.bank_name,
     status: seller.status,
   };
 

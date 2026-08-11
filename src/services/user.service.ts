@@ -20,17 +20,17 @@ import { UpdateUserDto } from "../dtos/user/update.dto";
 import { UpdateUserData } from "../types/database/user/update-user.row";
 import { ConflictError } from "../errors/conflict-error";
 
-interface UserResponseSource {
+interface UserResponseSourceRow {
   id: number;
   full_name: string;
   email: string;
   role: UserResponseDto["role"];
 }
 
-const toUserResponseDto = (user: UserResponseSource): UserResponseDto => ({
+const toUserResponseDto = (user: UserResponseSourceRow): UserResponseDto => ({
   id: user.id,
   email: user.email,
-  fullname: user.full_name,
+  fullName: user.full_name,
   role: user.role,
 });
 

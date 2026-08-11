@@ -23,10 +23,12 @@ import {
 export const getProductById = async (productId: number) => {
   const result = await pool.query<ProductByIdRow>(
     `
-      select p.id, p.name, p.price, p.quantity, p.description, p.store_id, p.is_hidden, p.updated_at, p.created_at, s.name store_name, p.is_hidden, s.status store_status
+      select p.id, p.name, p.price, p.quantity, p.description, p.store_id, p.updated_at, p.created_at, s.name store_name, p.is_hidden,
+      s.status store_status
       from products p inner join stores s on s.id = p.store_id 
       where p.id = $1
-      AND p.deleted_at IS NULL 
+      AND p.deleted_at IS NULL and p.is_hidden = false
+      and s.status = 'OPEN' and s.deleted_at IS NULL;
     `,
     [productId],
   );
@@ -344,8 +346,6 @@ export const getProducts = async (query: QueryDto) => {
     queryStatement,
     [...values],
   );
-  console.log(...values);
-  console.log(whereClause);
   return result.rows;
 };
 

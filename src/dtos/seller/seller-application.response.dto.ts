@@ -1,19 +1,24 @@
-import { SellerStatus, StoreStatus, UserRole } from "../../types/shared/status.js";
+import {
+  SellerStatus,
+  StoreStatus,
+  UserRole,
+} from "../../types/shared/status.js";
 
-export interface SellerApplicationResponseDto {
-  id: number;
-  full_name: string;
+export interface SellerApplicationDetailsDto {
+  userId: number;
+  fullName: string;
   email: string;
   role: UserRole;
-  national_id: string;
-  national_id_image: string;
-  bank_name: string;
-  store_name: string;
-  seller_status: SellerStatus;
-  store_status: StoreStatus;
+  nationalId: string;
+  nationalIdImage: string;
+  bankName: string;
+  storeId: number;
+  storeName: string;
+  sellerStatus: SellerStatus;
+  storeStatus: StoreStatus;
 }
 
 export interface MySellerApplicationResponseDto {
   message: string;
-  application: SellerApplicationResponseDto;
+  application: SellerApplicationDetailsDto;
 }

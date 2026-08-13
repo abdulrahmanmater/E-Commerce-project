@@ -1,5 +1,4 @@
 import { StoreStatus } from "../../types/shared/status.js";
-
 export interface ProductResponseDto {
   storeName: string;
   id: number;
@@ -10,7 +9,6 @@ export interface ProductResponseDto {
   updatedAt: Date;
   createdAt: Date;
 }
-
 export interface MyProductsResponseDto {
   products: {
     storeId: number;
@@ -28,15 +26,17 @@ export interface MyProductsResponseDto {
   pagination: {
     totalItems: number;
     totalPages: number;
+    page: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
   };
 }
-
 export interface ProductStoreResponseDto {
   id: number;
   name: string;
   status: StoreStatus;
 }
-
 export interface ProductDetailsResponseDto {
   id: number;
   name: string;
@@ -44,18 +44,15 @@ export interface ProductDetailsResponseDto {
   quantity: number;
   description: string;
 }
-
 export interface CreatedProductResponseDto {
   message: string;
   store: ProductStoreResponseDto;
   product: ProductDetailsResponseDto;
 }
-
 export interface UpdatedProductResponseDto {
   message: string;
   product: ProductDetailsResponseDto;
 }
-
 export interface DeletedProductResponseDto {
   message: string;
   product: ProductDetailsResponseDto;

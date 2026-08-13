@@ -2,11 +2,11 @@
 
 import pool from "../config/db";
 import {
-  allowedSorting,
   allowedSortOrders,
+  productsAllowedSorting,
 } from "../constants/allowed-sorting";
 import { CreateProductDto } from "../dtos/product/create.dto";
-import { QueryDto } from "../dtos/product/query.dto";
+import { ProductsQueryDto } from "../dtos/product/query.dto";
 import {
   ProductByIdRow,
   CreatedProductRow,
@@ -147,7 +147,10 @@ export const updateProductVisibility = async (
 
 // get my products
 
-export const getMyProducts = async (userId: number, query: QueryDto) => {
+export const getMyProducts = async (
+  userId: number,
+  query: ProductsQueryDto,
+) => {
   let queryStatement = `SELECT s.name store_name, s.status store_status, s.id store_id,
         p.id, p.name, p.price, p.quantity, p.description, p.is_hidden, p.updated_at, p.created_at
         FROM users u 
@@ -164,7 +167,7 @@ export const getMyProducts = async (userId: number, query: QueryDto) => {
     sorting,
     sortOrder,
   } = query;
-  const sortColumn = allowedSorting[sorting];
+  const sortColumn = productsAllowedSorting[sorting];
   const sortOrderColumn = allowedSortOrders[sortOrder];
   const offset = (page - 1) * limit;
   const conditions: string[] = [];
@@ -206,7 +209,10 @@ export const getMyProducts = async (userId: number, query: QueryDto) => {
 
 // count my products
 
-export const countMyProducts = async (userId: number, query: QueryDto) => {
+export const countMyProducts = async (
+  userId: number,
+  query: ProductsQueryDto,
+) => {
   const { category, isHidden, minPrice, maxPrice } = query;
   let queryStatement = `select COUNT(DISTINCT p.id)         
     FROM users u 
@@ -253,7 +259,7 @@ export const countMyProducts = async (userId: number, query: QueryDto) => {
 
 //count all products
 
-export const countAllProducts = async (query: QueryDto) => {
+export const countAllProducts = async (query: ProductsQueryDto) => {
   const { category, minPrice, maxPrice } = query;
   let queryStatement = `    select COUNT(DISTINCT p.id)         
     FROM 
@@ -296,7 +302,7 @@ export const countAllProducts = async (query: QueryDto) => {
 
 //get all products
 
-export const getProducts = async (query: QueryDto) => {
+export const getProducts = async (query: ProductsQueryDto) => {
   const { page, limit, category, minPrice, maxPrice, sorting, sortOrder } =
     query;
   let queryStatement = `select p.id, p.name, p.price, p.quantity, p.description, p.created_at, p.updated_at, 
@@ -304,7 +310,7 @@ export const getProducts = async (query: QueryDto) => {
         from products p 
         inner join stores s 
         on s.id = p.store_id `;
-  const sortColumn = allowedSorting[sorting];
+  const sortColumn = productsAllowedSorting[sorting];
   const sortOrderColumn = allowedSortOrders[sortOrder];
 
   const offset = (page - 1) * limit;

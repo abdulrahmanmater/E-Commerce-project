@@ -3,10 +3,10 @@
 import { z } from "zod";
 import {
   sortOrderValues,
-  sortingValues,
+  productsSortingValues,
 } from "../../constants/allowed-sorting";
 
-export const querySchema = z.object({
+export const productsQuerySchema = z.object({
   body: z.object({}),
   params: z.object({}),
   query: z.object({
@@ -18,7 +18,7 @@ export const querySchema = z.object({
       .default(10),
     page: z.coerce.number().int("Page must be an integer").min(1).default(1),
     category: z.string().trim().toLowerCase().optional(),
-    sorting: z.enum(sortingValues).default("updatedAt"),
+    sorting: z.enum(productsSortingValues).default("updatedAt"),
     sortOrder: z.enum(sortOrderValues).default("asc"),
     isHidden: z
       .enum(["true", "false"])

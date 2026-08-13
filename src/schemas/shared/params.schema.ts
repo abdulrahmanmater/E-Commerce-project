@@ -5,7 +5,8 @@ import { z } from "zod";
 const id = z.coerce
   .number("Id must be a number")
   .int("Id must be an integer")
-  .positive("Id must be greater than 0");
+  .positive("Id must be greater than 0")
+  .optional();
 
 export const productIdParamsSchema = z.object({
   productId: id,

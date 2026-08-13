@@ -3,7 +3,7 @@ import { StoreStatus } from "../../shared/status.js";
 export interface ProductByIdRow {
   id: number;
   name: string;
-  price: number;
+  price: string;
   quantity: number;
   description: string;
   store_id: number;
@@ -20,7 +20,7 @@ export interface MyProductRow {
   store_id: number;
   id: number;
   name: string;
-  price: number;
+  price: string;
   quantity: number;
   description: string;
   is_hidden: boolean;
@@ -33,7 +33,7 @@ export interface MyProductRowWithoutStoreStatus {
   store_id: number;
   id: number;
   name: string;
-  price: number;
+  price: string;
   quantity: number;
   description: string;
   is_hidden: boolean;
@@ -44,9 +44,10 @@ export interface MyProductRowWithoutStoreStatus {
 export interface CreatedProductRow {
   id: number;
   name: string;
-  price: number;
+  price: string;
   quantity: number;
   description: string;
+  is_hidden: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -54,9 +55,10 @@ export interface CreatedProductRow {
 export interface UpdatedProductRow {
   id: number;
   name: string;
-  price: number;
+  price: string;
   quantity: number;
   description: string;
+  is_hidden: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -64,7 +66,7 @@ export interface UpdatedProductRow {
 export interface ProductByStoreIdAndNameRow {
   id: number;
   name: string;
-  price: number;
+  price: string;
   quantity: number;
   description: string;
   store_id: number;
@@ -77,9 +79,10 @@ export interface ProductByStoreIdAndNameRow {
 export interface DeletedProductRow {
   id: number;
   name: string;
-  price: number;
+  price: string;
   quantity: number;
   description: string;
+  is_hidden: boolean;
 }
 
 export interface UpdateProductData {

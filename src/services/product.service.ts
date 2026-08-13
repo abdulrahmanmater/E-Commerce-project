@@ -18,6 +18,7 @@ import { findSellerContextByUserId } from "../repositories/seller.repository";
 import { StoreStatus } from "../types/shared/status";
 import { CreateProductDto } from "../dtos/product/create.dto";
 import { UpdateProductDto } from "../dtos/product/update.dto";
+import { UpdateProductVisibilityDto } from "../dtos/product/visibility.dto";
 import {
   ProductResponseDto,
   CreatedProductResponseDto,
@@ -34,14 +35,15 @@ import {
   DeletedProductRow,
 } from "../types/database/product/product.row";
 import { UpdateProductData } from "../types/database/product/product.row";
-import { SellerApplicationDetailsRow } from "../types/database/admin/admin.row";
-import { QueryDto } from "../dtos/product/query.dto";
+import { SellerApplicationResponseRow } from "../types/database/seller/seller-application.row";
+import { ProductsQueryDto } from "../dtos/product/query.dto";
+import { UnauthorizedError } from "../errors/unauthorized-error";
 
 const toProductResponseDto = (product: ProductByIdRow): ProductResponseDto => ({
   storeName: product.store_name,
   id: product.id,
   name: product.name,
-  price: product.price,
+  price: Number(product.price),
   quantity: product.quantity,
   description: product.description,
   updatedAt: product.updated_at,
@@ -53,13 +55,13 @@ const toProductDetailsResponseDto = (
 ): ProductDetailsResponseDto => ({
   id: product.id,
   name: product.name,
-  price: product.price,
+  price: Number(product.price),
   quantity: product.quantity,
   description: product.description,
 });
 
 const toProductStoreResponseDto = (
-  sellerContext: SellerApplicationDetailsRow,
+  sellerContext: SellerApplicationResponseRow,
 ): ProductStoreResponseDto => ({
   id: sellerContext.store_id,
   name: sellerContext.store_name,
@@ -87,7 +89,7 @@ export const addProduct = async (
 ): Promise<CreatedProductResponseDto> => {
   const sellerContext = await findSellerContextByUserId(userId);
   if (!sellerContext) {
-    throw new NotFoundError("Seller profile not found.");
+    throw new UnauthorizedError("You are not a seller.");
   }
 
   if (sellerContext.store_status !== StoreStatus.OPEN) {
@@ -189,8 +191,8 @@ export const deleteProduct = async (
 export const updateProductVisibility = async (
   userId: number,
   productId: number,
-  isHidden: any,
-) => {
+  isHidden: UpdateProductVisibilityDto,
+): Promise<UpdatedProductResponseDto> => {
   const product = await getProductByIdRepository(productId);
   if (!product) {
     throw new NotFoundError("Product not found");
@@ -220,7 +222,7 @@ export const updateProductVisibility = async (
 
 export const getMyProducts = async (
   userId: number,
-  query: QueryDto,
+  query: ProductsQueryDto,
 ): Promise<MyProductsResponseDto> => {
   const limit = query.limit;
   const page = query.page;
@@ -228,7 +230,7 @@ export const getMyProducts = async (
   const sellerContext = await findSellerContextByUserId(userId);
 
   if (!sellerContext) {
-    throw new NotFoundError("Seller profile not found.");
+    throw new NotFoundError("You are not a seller.");
   }
 
   const products = await getMyProductsRepository(userId, query);
@@ -239,7 +241,7 @@ export const getMyProducts = async (
       storeStatus: product.store_status,
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: Number(product.price),
       quantity: product.quantity,
       description: product.description,
       isHidden: product.is_hidden,
@@ -268,7 +270,7 @@ export const getMyProducts = async (
 
 // get product public
 
-export const getProducts = async (query: QueryDto) => {
+export const getProducts = async (query: ProductsQueryDto) => {
   const products = await getProductsRepository(query);
   const { totalItems } = await countAllProducts(query);
   const totalPages = Math.ceil(totalItems / query.limit);
@@ -294,7 +296,7 @@ export const getProducts = async (query: QueryDto) => {
       product: {
         id: product.id,
         name: product.name,
-        price: product.price,
+        price: Number(product.price),
         quantity: product.quantity,
         description: product.description,
         updatedAt: product.updated_at,

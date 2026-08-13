@@ -12,6 +12,7 @@ import {
 } from "../services/product.service";
 import { CreateProductDto } from "../dtos/product/create.dto";
 import { UpdateProductDto } from "../dtos/product/update.dto";
+import { UpdateProductVisibilityDto } from "../dtos/product/visibility.dto";
 import { QueryDto } from "../dtos/product/query.dto";
 
 // get product by id
@@ -54,7 +55,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
 // update product visibility
 
 export const updateProductVisibility = async (req: Request, res: Response) => {
-  const isHidden = req.validated!.body;
+  const isHidden = req.validated!.body as UpdateProductVisibilityDto;
   const userId = Number(req.user.id);
   const productId = Number(req.params.productId);
   return res.json(

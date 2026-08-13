@@ -15,7 +15,7 @@ const router = Router();
 router.post(
   "/",
   auth,
-  authorize(UserRole.CUSTOMER),
+  authorize(UserRole.CUSTOMER, UserRole.SELLER),
   validate(createSellerSchema),
   createSeller,
 );

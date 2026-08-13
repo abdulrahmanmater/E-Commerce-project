@@ -43,6 +43,12 @@ export const globalErrorHandler = (
               message: "Bank account number already exists",
             });
 
+          case "unique_product_name_per_store":
+            return res.status(StatusCodes.CONFLICT).json({
+              status: "error",
+              message: "A product with this name already exists in your store",
+            });
+
           default:
             return res.status(StatusCodes.CONFLICT).json({
               status: "error",

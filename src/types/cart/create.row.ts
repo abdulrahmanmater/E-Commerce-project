@@ -1,36 +1,38 @@
 //create.row.ts
 
-export interface CartItemsRow {
-  item_id: number;
-  product_id: number;
-  product_name: string;
-  product_price: number;
-  item_quantity: number;
-  sub_total: number;
-}
-export interface CartItemRow {
-  item_id: number;
-  product_id: number;
-  product_name: string;
-  product_price: number;
-  product_quantity: number;
-  item_quantity: number;
-  sub_total: number;
+export interface CartRow {
+  id: number;
 }
 
-export interface UpdateOrDeleteCartItemRow {
+export interface CartItemRow {
+  item_id: number;
+  cart_id: number;
+  product_id: number;
+  product_name: string;
+  product_price: string;
+  product_quantity: number;
+  item_quantity: number;
+  sub_total: string;
+}
+
+export interface CartItemMutationRow {
+  id: number;
   cart_id: number;
   product_id: number;
   item_quantity: number;
 }
 
-export interface DeleteCartRow {
-  id: number;
-  user_id: number;
+export interface CartTotalRow {
+  total: string;
 }
 
-export interface AddCartItemsRow {
-  cart_item_id: number;
-  product_id: number;
+export interface DeletedCartItemRow {
   item_quantity: number;
+  cart_id: number;
+  product_id: number;
+}
+
+export interface DeletedCartRow {
+  id: number;
+  user_id: number;
 }

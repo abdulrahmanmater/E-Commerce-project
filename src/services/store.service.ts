@@ -1,6 +1,6 @@
 // store.service.ts
 
-import { QueryDto } from "../dtos/product/query.dto";
+import { ProductsQueryDto } from "../dtos/product/query.dto";
 import { ConflictError } from "../errors/conflict-error";
 import { NotFoundError } from "../errors/not-found-error";
 import {
@@ -15,7 +15,7 @@ import { StoreStatus } from "../types/shared/status";
 
 export const getStoreProducts = async (
   storeId: number,
-  query: QueryDto,
+  query: ProductsQueryDto,
 ): Promise<StoreProductsResponseDto> => {
   const store = await getStore(storeId);
 

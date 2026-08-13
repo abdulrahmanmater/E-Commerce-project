@@ -1,12 +1,14 @@
 // store.repository
 
+import { PoolClient } from "pg";
 import pool from "../config/db";
 import {
-  allowedSorting,
+  productsAllowedSorting,
   allowedSortOrders,
 } from "../constants/allowed-sorting";
-import { QueryDto } from "../dtos/product/query.dto";
+import { ProductsQueryDto } from "../dtos/product/query.dto";
 import { StoreProductRow, StoreRow } from "../types/database/store/create.row";
+import { CheckoutStoreRow } from "../types/database/checkout/checkout.row";
 
 export const getStore = async (storeId: number) => {
   const result = await pool.query<StoreRow>(
@@ -22,12 +24,12 @@ export const getStore = async (storeId: number) => {
 
 export const getProductsByStoreId = async (
   storeId: number,
-  query: QueryDto,
+  query: ProductsQueryDto,
 ) => {
   let queryStatement = `select p.id, p.name, p.price, p.quantity, p.description, p.created_at, p.updated_at from products p `;
   const { page, limit, category, minPrice, maxPrice, sorting, sortOrder } =
     query;
-  const sortColumn = allowedSorting[sorting];
+  const sortColumn = productsAllowedSorting[sorting];
   const sortOrderColumn = allowedSortOrders[sortOrder];
   const offset = (page - 1) * limit;
   const conditions: string[] = [];
@@ -65,7 +67,10 @@ export const getProductsByStoreId = async (
 
 // count store products
 
-export const countStoreProducts = async (storeId: number, query: QueryDto) => {
+export const countStoreProducts = async (
+  storeId: number,
+  query: ProductsQueryDto,
+) => {
   const { category, minPrice, maxPrice } = query;
   let queryStatement = `    select COUNT(DISTINCT p.id)
         from products p `;
@@ -102,4 +107,28 @@ export const countStoreProducts = async (storeId: number, query: QueryDto) => {
   ]);
   const totalItems = Number(result.rows[0].count);
   return { totalItems };
+};
+
+// =========================
+// Find stores by IDs
+// =========================
+
+export const findALllStoresByStoresId = async (
+  client: PoolClient,
+  storesId: number[],
+): Promise<CheckoutStoreRow[]> => {
+  const result = await client.query<CheckoutStoreRow>(
+    `
+      SELECT
+        id,
+        status,
+        name,
+        deleted_at
+      FROM stores
+      WHERE id = ANY($1::int[]);
+    `,
+    [storesId],
+  );
+
+  return result.rows;
 };

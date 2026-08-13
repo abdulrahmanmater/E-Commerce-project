@@ -71,6 +71,8 @@ const toStoreResponseDto = (store: CreatedStoreRow): ResponseStoreDto => ({
   status: store.status,
 });
 
+// create seller
+
 export const createSeller = async (
   userId: number,
   input: CreateSellerDto,
@@ -81,7 +83,6 @@ export const createSeller = async (
     await client.query("BEGIN");
 
     const user = await lockUser(client, userId);
-
     if (!user) {
       throw new NotFoundError("User not found");
     }

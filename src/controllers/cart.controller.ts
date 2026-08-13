@@ -1,56 +1,61 @@
 //cart.controller.ts
 
 import { Request, Response } from "express";
+
+import { AddCartItemDto, UpdateCartItemDto } from "../dtos/cart/cartItems.dto";
+
 import {
   getCartItems as getCartItemsService,
   addCartItem as addCartItemService,
-  updateCartItem as updateCartItemService,
-  deleteCartItem as deleteCartItemService,
-  deleteCart as deleteCartService,
+  updateCartItemQuantity as updateCartItemQuantityService,
+  removeCartItem as removeCartItemService,
+  removeCart as removeCartService,
 } from "../services/cart.service";
-import { AddCartItemDto, UpdateCartItemDto } from "../dtos/cart/cartItems.dto";
-//get cart items
 
 export const getCartItems = async (req: Request, res: Response) => {
   const userId = Number(req.user.id);
-  res.json(await getCartItemsService(userId));
-};
 
-//add cart item
+  const cart = await getCartItemsService(userId);
+
+  res.json(cart);
+};
 
 export const addCartItem = async (req: Request, res: Response) => {
   const userId = Number(req.user.id);
-  res
-    .status(201)
-    .json(
-      await addCartItemService(userId, req.validated!.body as AddCartItemDto),
-    );
-};
 
-// update cart item
+  const body = req.validated!.body as AddCartItemDto;
+
+  const result = await addCartItemService(userId, body);
+
+  res.status(201).json(result);
+};
 
 export const updateCartItem = async (req: Request, res: Response) => {
-  res.json(
-    await updateCartItemService(
-      Number(req.user.id),
-      Number(req.params.productId),
-      req.validated!.body as UpdateCartItemDto,
-    ),
-  );
-};
+  const userId = Number(req.user.id);
 
-// delete cart item
+  const productId = Number(req.params.productId);
+
+  const body = req.validated!.body as UpdateCartItemDto;
+
+  const result = await updateCartItemQuantityService(userId, productId, body);
+
+  res.json(result);
+};
 
 export const deleteCartItem = async (req: Request, res: Response) => {
-  res.json(
-    await deleteCartItemService(
-      Number(req.user.id),
-      Number(req.params.productId),
-    ),
-  );
+  const userId = Number(req.user.id);
+
+  const productId = Number(req.params.productId);
+
+  const result = await removeCartItemService(userId, productId);
+
+  res.json(result);
 };
-// delete cart
 
 export const deleteCart = async (req: Request, res: Response) => {
-  res.json(await deleteCartService(Number(req.user.id)));
+  const userId = Number(req.user.id);
+
+  const result = await removeCartService(userId);
+
+  res.json(result);
 };

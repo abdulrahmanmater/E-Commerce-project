@@ -1,176 +1,292 @@
-//cart.repository.ts
+// cart.repository.ts
 
+import { PoolClient } from "pg";
 import pool from "../config/db";
+
 import {
-  AddCartItemsRow,
+  CartItemMutationRow,
   CartItemRow,
-  CartItemsRow,
-  DeleteCartRow,
-  UpdateOrDeleteCartItemRow,
+  CartRow,
+  CartTotalRow,
+  DeletedCartItemRow,
+  DeletedCartRow,
 } from "../types/cart/create.row";
 
-//get cart
-
-export const getCart = async (userId: number) => {
-  const result = await pool.query<{ id: number }>(
+/**
+ * Get cart without locking it.
+ *
+ * Used for read-only operations such as GET /carts.
+ */
+export const getCart = async (userId: number): Promise<CartRow | undefined> => {
+  const result = await pool.query<CartRow>(
     `
-      select id  from carts 
-      where user_id = $1;
+      SELECT id
+      FROM carts
+      WHERE user_id = $1
     `,
     [userId],
   );
+
   return result.rows[0];
 };
 
-// add cart
-
-export const addCart = async (userID: number) => {
-  const result = await pool.query<{ id: number }>(
+/**
+ * Get the user's cart and lock it.
+ *
+ * This is used inside a transaction for cart mutations
+ * and checkout.
+ */
+export const lockCart = async (
+  client: PoolClient,
+  userId: number,
+): Promise<CartRow | undefined> => {
+  const result = await client.query<CartRow>(
     `
-      insert into carts (user_id) values ($1)
-      ON CONFLICT (user_id) DO NOTHING
-      returning id 
+      SELECT id
+      FROM carts
+      WHERE user_id = $1
+      FOR UPDATE
     `,
-    [userID],
+    [userId],
   );
+
   return result.rows[0];
 };
 
-//get cart items
-
-export const getCartItems = async (cartId: number) => {
-  const result = await pool.query<CartItemsRow>(
+/**
+ * Create a cart if it does not exist.
+ *
+ * Important:
+ * ON CONFLICT DO NOTHING + RETURNING can return zero rows.
+ * Therefore, this function handles both cases by selecting
+ * the cart after the insert attempt.
+ */
+export const getOrCreateCart = async (
+  client: PoolClient,
+  userId: number,
+): Promise<CartRow> => {
+  const inserted = await client.query<CartRow>(
     `
-    SELECT
-        ci.id AS item_id,
-        ci.quantity AS item_quantity,
-        p.id AS product_id,
-        p.name AS product_name,
-        p.price AS product_price,
-        p.price * ci.quantity AS sub_total
-        from cart_items ci
-        inner join products p on p.id = ci.product_id
-        where ci.cart_id = $1;
-        `,
-    [cartId],
+      INSERT INTO carts (user_id)
+      VALUES ($1)
+      ON CONFLICT (user_id) DO NOTHING
+      RETURNING id
+    `,
+    [userId],
   );
-  return result.rows;
+
+  if (inserted.rows[0]) {
+    return inserted.rows[0];
+  }
+
+  const existing = await client.query<CartRow>(
+    `
+      SELECT id
+      FROM carts
+      WHERE user_id = $1
+      FOR UPDATE
+    `,
+    [userId],
+  );
+
+  const cart = existing.rows[0];
+
+  if (!cart) {
+    throw new Error("Cart could not be created or retrieved");
+  }
+
+  return cart;
 };
 
-//get cart items by cart id
-
-export const getCartItemsByCartIdAndProductId = async (
-  cartId: number,
-  productId: number,
-) => {
+/**
+ * Get all cart items.
+ */
+export const getCartItems = async (cartId: number): Promise<CartItemRow[]> => {
   const result = await pool.query<CartItemRow>(
     `
-    select
+      SELECT
         ci.id AS item_id,
-        ci.quantity AS item_quantity,
-        p.id AS product_id,
+        ci.cart_id,
+        ci.product_id,
         p.name AS product_name,
         p.price AS product_price,
         p.quantity AS product_quantity,
+        ci.quantity AS item_quantity,
         p.price * ci.quantity AS sub_total
-        from cart_items ci
-        inner join products p on p.id = ci.product_id
-        where ci.cart_id = $1 and p.id = $2;
-        `,
+      FROM cart_items ci
+      INNER JOIN products p
+        ON p.id = ci.product_id
+      WHERE ci.cart_id = $1
+      ORDER BY ci.id ASC
+    `,
+    [cartId],
+  );
+
+  return result.rows;
+};
+
+/**
+ * Get a specific cart item.
+ *
+ * This is intentionally scoped by cartId.
+ * The service therefore cannot accidentally access another
+ * user's cart item.
+ */
+export const getCartItemByProductId = async (
+  client: PoolClient,
+  cartId: number,
+  productId: number,
+): Promise<CartItemRow | undefined> => {
+  const result = await client.query<CartItemRow>(
+    `
+      SELECT
+        ci.id AS item_id,
+        ci.cart_id,
+        ci.product_id,
+        p.name AS product_name,
+        p.price AS product_price,
+        p.quantity AS product_quantity,
+        ci.quantity AS item_quantity,
+        p.price * ci.quantity AS sub_total
+      FROM cart_items ci
+      INNER JOIN products p
+        ON p.id = ci.product_id
+      WHERE ci.cart_id = $1
+        AND ci.product_id = $2
+    `,
     [cartId, productId],
   );
+
   return result.rows[0];
 };
 
-// add cart item
-
+/**
+ * Add a cart item.
+ *
+ * The UNIQUE(cart_id, product_id) constraint remains the
+ * database-level protection against duplicate items.
+ */
 export const addCartItem = async (
+  client: PoolClient,
   cartId: number,
   productId: number,
   quantity: number,
-) => {
-  const result = await pool.query<AddCartItemsRow>(
+): Promise<CartItemMutationRow> => {
+  const result = await client.query<CartItemMutationRow>(
     `
-    insert into cart_items (cart_id, product_id, quantity)
-    values ($1, $2, $3)
-    returning id cart_items_id, product_id, quantity item_quantity;
+      INSERT INTO cart_items (
+        cart_id,
+        product_id,
+        quantity
+      )
+      VALUES ($1, $2, $3)
+      RETURNING
+        id,
+        cart_id,
+        product_id,
+        quantity AS item_quantity
     `,
     [cartId, productId, quantity],
   );
+
   return result.rows[0];
 };
 
-// total sum of cart
-
-export const sumTotal = async (cartId: number) => {
-  const result = await pool.query<{ total: number }>(
+/**
+ * Update an existing cart item.
+ */
+export const updateCartItem = async (
+  client: PoolClient,
+  cartItemId: number,
+  quantity: number,
+): Promise<CartItemMutationRow | undefined> => {
+  const result = await client.query<CartItemMutationRow>(
     `
-        SELECT COALESCE(
-          SUM(p.price * ci.quantity),
-        0) AS total
-        from cart_items ci
-        inner join products p on p.id = ci.product_id
-        where ci.cart_id = $1;
-        `,
+      UPDATE cart_items
+      SET
+        quantity = $1,
+        updated_at = NOW()
+      WHERE id = $2
+      RETURNING
+        id,
+        cart_id,
+        product_id,
+        quantity AS item_quantity
+    `,
+    [quantity, cartItemId],
+  );
+
+  return result.rows[0];
+};
+
+/**
+ * Calculate cart total from the current product prices.
+ *
+ * Product price is deliberately NOT stored in cart_items.
+ * Checkout will snapshot the price into order_items.
+ */
+export const sumTotal = async (cartId: number): Promise<number> => {
+  const result = await pool.query<CartTotalRow>(
+    `
+      SELECT COALESCE(
+        SUM(p.price * ci.quantity),
+        0
+      ) AS total
+      FROM cart_items ci
+      INNER JOIN products p
+        ON p.id = ci.product_id
+      WHERE ci.cart_id = $1
+    `,
     [cartId],
   );
+
   return Number(result.rows[0].total);
 };
 
-//update cart item quantity
-
-export const updateCartItemQuantity = async (
+/**
+ * Delete a cart item.
+ */
+export const deleteCartItem = async (
+  client: PoolClient,
   cartItemId: number,
-  newQuantity: number,
-) => {
-  const result = await pool.query<UpdateOrDeleteCartItemRow>(
+): Promise<DeletedCartItemRow | undefined> => {
+  const result = await client.query<DeletedCartItemRow>(
     `
-    update cart_items SET quantity = $1 ,
-    updated_at = NOW()
-    where id = $2
-    returning quantity item_quantity, cart_id, product_id 
-  `,
-    [newQuantity, cartItemId],
-  );
-  return result.rows[0];
-};
-
-// update cart item
-
-export const updateCartItem = async (quantity: number, cartItemId: number) => {
-  const result = await pool.query<UpdateOrDeleteCartItemRow>(
-    `
-    update cart_items set quantity = $1,  updated_at = NOW()
-    where id = $2 
-    returning quantity item_quantity, cart_id, product_id 
-  `,
-    [quantity, cartItemId],
-  );
-  return result.rows[0];
-};
-
-//delete cart item
-
-export const deleteCartItem = async (cartItemId: number) => {
-  const result = await pool.query<UpdateOrDeleteCartItemRow>(
-    `
-    delete from cart_items where id = $1 
-    returning quantity item_quantity, cart_id, product_id 
+      DELETE FROM cart_items
+      WHERE id = $1
+      RETURNING
+        quantity AS item_quantity,
+        cart_id,
+        product_id
     `,
     [cartItemId],
   );
+
   return result.rows[0];
 };
 
-//delete cart
-
-export const deleteCart = async (cartId: number) => {
-  const result = await pool.query<DeleteCartRow>(
+/**
+ * Delete the entire cart.
+ *
+ * cart_items are automatically deleted by:
+ *
+ * FK cart_items.cart_id -> carts.id
+ * ON DELETE CASCADE
+ */
+export const deleteCart = async (
+  client: PoolClient,
+  cartId: number,
+): Promise<DeletedCartRow | undefined> => {
+  const result = await client.query<DeletedCartRow>(
     `
-    delete from carts where id = $1 
-    returning id , user_id
+      DELETE FROM carts
+      WHERE id = $1
+      RETURNING
+        id,
+        user_id
     `,
     [cartId],
   );
+
   return result.rows[0];
 };

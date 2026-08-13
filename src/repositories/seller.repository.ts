@@ -6,7 +6,7 @@ import { CreatedStoreRow } from "../types/database/store/create.row.js";
 import { CreateSellerRow } from "../types/database/create-seller.row.js";
 import {
   LockedSellerUserRow,
-  SellerApplicationDetailsRow,
+  SellerApplicationResponseRow,
   SellerStatusRow,
 } from "../types/database/seller/seller-application.row.js";
 import { SellerStatus } from "../types/shared/status.js";
@@ -119,12 +119,13 @@ export const deleteSellerProfile = async (
 //find seller application by user_id
 
 export const findSellerContextByUserId = async (user_id: number) => {
-  const application = await pool.query<SellerApplicationDetailsRow>(
+  const application = await pool.query<SellerApplicationResponseRow>(
     `
         SELECT u.id AS user_id, u.full_name, u.email, u.role, 
         sp.national_id, sp.national_id_image, sp.bank_name, sp.status AS seller_status,
         s.id store_id, s.name AS store_name, s.status AS store_status
-            FROM seller_profiles sp inner join users u on u.id = sp.user_id 
+            FROM seller_profiles 
+            sp inner join users u on u.id = sp.user_id 
             inner join stores s on s.seller_profile_id =sp.id WHERE user_id = $1
     `,
     [user_id],

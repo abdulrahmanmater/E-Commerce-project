@@ -3,9 +3,13 @@
 import { Router } from "express";
 import { getStoreProducts } from "../controllers/store.controller";
 import { validate } from "../middlewares/validate.middleware";
-import { querySchema } from "../schemas/shared/query.schema";
+import { productsQuerySchema } from "../schemas/shared/query.schema";
 const router = Router();
 
-router.get("/:storeId/products", validate(querySchema), getStoreProducts);
+router.get(
+  "/:storeId/products",
+  validate(productsQuerySchema),
+  getStoreProducts,
+);
 
 export default router;

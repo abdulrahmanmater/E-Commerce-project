@@ -13,7 +13,7 @@ import {
 import { CreateProductDto } from "../dtos/product/create.dto";
 import { UpdateProductDto } from "../dtos/product/update.dto";
 import { UpdateProductVisibilityDto } from "../dtos/product/visibility.dto";
-import { QueryDto } from "../dtos/product/query.dto";
+import { ProductsQueryDto } from "../dtos/product/query.dto";
 
 // get product by id
 
@@ -66,7 +66,7 @@ export const updateProductVisibility = async (req: Request, res: Response) => {
 //get my products
 
 export const getMyProducts = async (req: Request, res: Response) => {
-  const query = req.validated!.query as QueryDto;
+  const query = req.validated!.query as ProductsQueryDto;
   const userId = Number(req.user.id);
   return res.json(await getMyProductsService(userId, query));
 };
@@ -74,7 +74,7 @@ export const getMyProducts = async (req: Request, res: Response) => {
 //get all products
 
 export const getProducts = async (req: Request, res: Response) => {
-  const query = req.validated!.query as QueryDto;
+  const query = req.validated!.query as ProductsQueryDto;
   console.log(query);
   return res.json(await getProductsService(query));
 };

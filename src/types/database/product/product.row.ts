@@ -1,4 +1,4 @@
-import { StoreStatus } from "../../shared/status.js";
+import { StoreStatus } from "../../../constants/status.js";
 
 export interface ProductByIdRow {
   id: number;
@@ -75,7 +75,16 @@ export interface ProductByStoreIdAndNameRow {
   updated_at: Date;
   deleted_at: Date | null;
 }
-
+export interface ProductsRow {
+  id: number;
+  name: string;
+  price: string;
+  quantity: number;
+  description: string;
+  created_at: Date;
+  updated_at: Date;
+}
+[];
 export interface DeletedProductRow {
   id: number;
   name: string;

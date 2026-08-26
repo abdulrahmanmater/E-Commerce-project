@@ -1,6 +1,6 @@
 // store.row
 
-import { StoreStatus } from "../../shared/status.js";
+import { StoreStatus } from "../../../constants/status.js";
 
 export interface CreateStoreData {
   name: string;

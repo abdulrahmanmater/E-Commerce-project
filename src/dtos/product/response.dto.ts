@@ -1,4 +1,4 @@
-import { StoreStatus } from "../../types/shared/status.js";
+import { StoreStatus } from "../../constants/status.js";
 export interface ProductResponseDto {
   storeName: string;
   id: number;

@@ -9,7 +9,7 @@ import {
   countStoreProducts,
 } from "../repositories/store.repository";
 import { StoreProductsResponseDto } from "../dtos/store/response.dto";
-import { StoreStatus } from "../types/shared/status";
+import { StoreStatus } from "../constants/status";
 
 // get products by store id
 

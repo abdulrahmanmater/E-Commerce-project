@@ -9,7 +9,7 @@ import {
   SellerApplicationResponseRow,
   SellerStatusRow,
 } from "../types/database/seller/seller-application.row.js";
-import { SellerStatus } from "../types/shared/status.js";
+import { SellerStatus } from "../constants/status.js";
 import pool from "../config/db";
 
 //get seller status

@@ -9,13 +9,13 @@ import {
   deleteProduct as deleteProductRepository,
   updateProductVisibility as updateProductVisibilityRepository,
   getMyProducts as getMyProductsRepository,
-  getProducts as getProductsRepository,
+  getAllProducts as getAllProductsRepository,
   findProductByStoreIdAndName,
   countMyProducts,
   countAllProducts,
 } from "../repositories/product.repository";
 import { findSellerContextByUserId } from "../repositories/seller.repository";
-import { StoreStatus } from "../types/shared/status";
+import { StoreStatus } from "../constants/status";
 import { CreateProductDto } from "../dtos/product/create.dto";
 import { UpdateProductDto } from "../dtos/product/update.dto";
 import { UpdateProductVisibilityDto } from "../dtos/product/visibility.dto";
@@ -271,7 +271,7 @@ export const getMyProducts = async (
 // get product public
 
 export const getProducts = async (query: ProductsQueryDto) => {
-  const products = await getProductsRepository(query);
+  const products = await getAllProductsRepository(query);
   const { totalItems } = await countAllProducts(query);
   const totalPages = Math.ceil(totalItems / query.limit);
   const hasNextPage = query.page < totalPages;

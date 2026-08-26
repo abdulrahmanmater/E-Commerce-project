@@ -9,7 +9,7 @@ import { comparePassword } from "../utils/password";
 import { findUserByEmail } from "../repositories/user.repository";
 import { generateAccessToken } from "../utils/jwt";
 import { AppError } from "../errors/app-error";
-import { StatusCodes } from "../constants/status-codes";
+import { StatusCodes } from "../constants/status";
 
 const toLoginUserResponseDto = (user: {
   id: number;

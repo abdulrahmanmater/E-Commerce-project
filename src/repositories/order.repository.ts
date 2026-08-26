@@ -3,16 +3,13 @@
 import pool from "../config/db";
 import { PoolClient } from "pg";
 
-import { UpdatedOrderItemStatusRow } from "../types/database/order/update.row";
 import {
   allowedSortOrders,
-  orderItemsALlowedSorting,
   ordersALlowedSorting,
 } from "../constants/allowed-sorting";
 import { OrdersParamsDto } from "../dtos/order/params.dto";
 import { OrdersQueryDto } from "../dtos/order/query.dto";
-import { NotFoundError } from "../errors/not-found-error";
-import { OrderItemStatus } from "../constants/allowed-status.transactions";
+import { GetOrder } from "../types/database/order/order.row";
 
 // Get orders
 
@@ -77,13 +74,13 @@ export const countAllOrders = async (userId: number, query: OrdersQueryDto) => {
   return { totalItems };
 };
 
-// get order by order id
+// get order by order id and user id
 
 export const getOrderByOrderIdAndUserId = async (
   { orderId }: OrdersParamsDto,
   userId: number,
 ) => {
-  const result = await pool.query(
+  const result = await pool.query<GetOrder>(
     `select * from orders where id = $1 and user_id = $2`,
     [orderId, userId],
   );
@@ -91,111 +88,24 @@ export const getOrderByOrderIdAndUserId = async (
   return result.rows[0];
 };
 
-// get order item by order id
-
-export const getOrderItemsByOrderId = async (
-  { orderId }: OrdersParamsDto,
-  query: OrdersQueryDto,
+export const getOrderForUpdateOwnedByUser = async (
+  client: PoolClient,
+  orderId: number,
+  userId: number,
 ) => {
-  if (!orderId) {
-    throw new NotFoundError("The route is not valid");
-  }
-  const {
-    page,
-    limit,
-    minItemPrice,
-    maxItemPrice,
-    orderItemsSorting,
-    sortOrder,
-  } = query;
-
-  const sortColumn = orderItemsALlowedSorting[orderItemsSorting];
-  const sortOrderColumn = allowedSortOrders[sortOrder];
-
-  const offset = (page - 1) * limit;
-  const conditions: string[] = [];
-  const values: (string | number | boolean)[] = [orderId, limit, offset];
-  if (minItemPrice !== undefined) {
-    values.push(minItemPrice);
-    conditions.push(`oi.item_price >= $${values.length}`);
-  }
-  if (maxItemPrice !== undefined) {
-    values.push(maxItemPrice);
-    conditions.push(`oi.item_price <= $${values.length}`);
-  }
-  const whereClause =
-    conditions.length > 0 ? `and ${conditions.join(" and ")}` : "";
-
-  const result = await pool.query(
-    `select id, product_id, quantity, item_price, status from order_items oi where order_id = $1 ${whereClause}
-    order by ${sortColumn} ${sortOrderColumn}, id ASC limit $2 offset $3;`,
-    [...values],
+  const result = await client.query<{
+    id: number;
+    user_id: number;
+    status: string;
+  }>(
+    `SELECT id, user_id, status FROM orders WHERE id = $1 AND user_id = $2 FOR UPDATE;`,
+    [orderId, userId],
   );
-
-  return result.rows;
-};
-
-//count all order items
-
-export const countAllOrderItems = async (
-  { orderId }: OrdersParamsDto,
-  query: OrdersQueryDto,
-) => {
-  if (!orderId) {
-    throw new NotFoundError("The route is not valid");
-  }
-  const { maxItemPrice, minItemPrice } = query;
-  const conditions: string[] = [];
-  const values: (string | number | boolean)[] = [orderId];
-  if (minItemPrice !== undefined) {
-    values.push(minItemPrice);
-    conditions.push(`oi.item_price >= $${values.length}`);
-  }
-  if (maxItemPrice !== undefined) {
-    values.push(maxItemPrice);
-    conditions.push(`oi.item_price <= $${values.length}`);
-  }
-  const whereClause =
-    conditions.length > 0 ? `and ${conditions.join(" and ")}` : "";
-
-  const result = await pool.query(
-    `select count(oi.id) from order_items oi where order_id = $1 ${whereClause};`,
-    [...values],
-  );
-  const totalItems = Number(result.rows[0].count);
-  return { totalItems };
-};
-
-//update order items status
-
-export const updateOrderItemStatus = async (
-  orderItemId: number,
-  sellerUserId: number,
-  status: OrderItemStatus,
-  allowedCurrentStatuses: OrderItemStatus[],
-): Promise<UpdatedOrderItemStatusRow | undefined> => {
-  const result = await pool.query<UpdatedOrderItemStatusRow>(
-    `
-      UPDATE order_items AS oi
-      SET
-        status = $1::order_item_status,
-        updated_at = NOW()
-      FROM products AS p
-      INNER JOIN stores AS s
-        ON s.id = p.store_id
-      INNER JOIN seller_profiles AS sp
-        ON sp.id = s.seller_profile_id
-      WHERE oi.id = $2
-        AND oi.product_id = p.id
-        AND sp.user_id = $3
-        AND oi.status = ANY($4::order_item_status[])
-      RETURNING
-        oi.id,
-        oi.product_id,
-        oi.status;
-    `,
-    [status, orderItemId, sellerUserId, allowedCurrentStatuses],
-  );
-
   return result.rows[0];
+};
+
+export const cancelOrderRow = async (client: PoolClient, orderId: number) => {
+  await client.query(`UPDATE orders SET status = 'CANCELLED' WHERE id = $1;`, [
+    orderId,
+  ]);
 };

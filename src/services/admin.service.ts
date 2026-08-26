@@ -1,7 +1,7 @@
 //admin.service.ts
 
 import pool from "../config/db";
-import { SellerStatus, StoreStatus, UserRole } from "../types/shared/status.js";
+import { SellerStatus, StoreStatus, UserRole } from "../constants/status.js";
 import { ConflictError } from "../errors/conflict-error";
 import { NotFoundError } from "../errors/not-found-error";
 import {

@@ -1,7 +1,7 @@
 //canManageUser.middleware.ts
 
 import { Request, Response, NextFunction } from "express";
-import { UserRole } from "../types/shared/status.js";
+import { UserRole } from "../constants/status.js";
 import { ForbiddenError } from "../errors/forbidden-error";
 
 export const canManageUser = (

@@ -1,4 +1,4 @@
-import { UserRole } from "../../shared/status.js";
+import { UserRole } from "../../../constants/status.js";
 
 export interface CreatedUserRow {
   id: number;

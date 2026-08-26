@@ -1,6 +1,6 @@
 // response.dto.ts
 
-import { StoreStatus } from "../../types/shared/status";
+import { StoreStatus } from "../../constants/status";
 export interface ResponseStoreDto {
   id: number;
   name: string;

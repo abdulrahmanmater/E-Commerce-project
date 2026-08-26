@@ -14,7 +14,7 @@ import { auth } from "../middlewares/auth.middleware";
 import { authorize } from "../middlewares/authorize.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { createProductSchema } from "../schemas/products/create.product.schema";
-import { UserRole } from "../types/shared/status";
+import { UserRole } from "../constants/status";
 import { updateProductSchema } from "../schemas/products/update.product.schema";
 import { updateProductVisibilitySchema } from "../schemas/products/visibility.schema";
 import { updateProductVisibility } from "../controllers/product.controller";

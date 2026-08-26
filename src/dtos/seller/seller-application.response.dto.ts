@@ -1,8 +1,4 @@
-import {
-  SellerStatus,
-  StoreStatus,
-  UserRole,
-} from "../../types/shared/status.js";
+import { SellerStatus, StoreStatus, UserRole } from "../../constants/status.js";
 
 export interface SellerApplicationDetailsDto {
   userId: number;

@@ -11,7 +11,7 @@ import {
   UpdateOrderItemStatusBodyDto,
   UpdateOrderItemStatusParamsDto,
 } from "../dtos/order/update.dto";
-
+import { cancelOrder as cancelOrderService } from "../services/order.service";
 import { updateOrderItemStatus as updateOrderItemStatusService } from "../services/order.service";
 
 // get orders
@@ -49,4 +49,11 @@ export const updateOrderItemStatus = async (req: Request, res: Response) => {
   );
 
   return res.status(200).json(result);
+};
+
+export const cancelOrder = async (req: Request, res: Response) => {
+  const orderId = Number(req.params.orderId);
+  const userId = Number(req.user.id);
+
+  res.status(200).json(await cancelOrderService(orderId, userId));
 };

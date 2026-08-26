@@ -1,5 +1,6 @@
 // product.repository
 
+import { PoolClient } from "pg";
 import pool from "../config/db";
 import {
   allowedSortOrders,
@@ -16,6 +17,7 @@ import {
   UpdateProductData,
   MyProductRow,
   MyProductRowWithoutStoreStatus,
+  ProductsRow,
 } from "../types/database/product/product.row";
 
 // get product by id
@@ -302,7 +304,7 @@ export const countAllProducts = async (query: ProductsQueryDto) => {
 
 //get all products
 
-export const getProducts = async (query: ProductsQueryDto) => {
+export const getAllProducts = async (query: ProductsQueryDto) => {
   const { page, limit, category, minPrice, maxPrice, sorting, sortOrder } =
     query;
   let queryStatement = `select p.id, p.name, p.price, p.quantity, p.description, p.created_at, p.updated_at, 
@@ -355,13 +357,19 @@ export const getProducts = async (query: ProductsQueryDto) => {
   return result.rows;
 };
 
-//get categories
+//get products by ids
 
-// export const getCategories = async () => {
-//   const result = await pool.query(
-//     `
-//         select name from categories;
-//     `,
-//   );
-//   return result.rows;
-// };
+export const getProductsByIdsForUpdate = async (
+  client: PoolClient,
+  ids: number[],
+) => {
+  const result = await client.query<ProductsRow>(
+    `
+    select id, name, price, quantity, description, created_at, updated_at from products 
+    where id = ANY($1::int[])
+    for Update
+  `,
+    [ids],
+  );
+  return { products: result.rows, productsCount: result.rowCount };
+};

@@ -3,15 +3,13 @@
 import { PoolClient } from "pg";
 import {
   LockedProductRow,
-  AddressRow,
   CreatedOrderRow,
   CreatedOrderItemRow,
   DecreasedStockRow,
 } from "../types/database/checkout/checkout.row";
+import { ConflictError } from "../errors/conflict-error";
 
-// =========================
 // Lock products + read cart
-// =========================
 
 export const lockProducts = async (
   client: PoolClient,
@@ -49,9 +47,7 @@ export const lockProducts = async (
   return result.rows;
 };
 
-// =========================
 // Lock cart
-// =========================
 
 export const lockCart = async (client: PoolClient, userId: number) => {
   const result = await client.query<{ id: number }>(
@@ -67,31 +63,7 @@ export const lockCart = async (client: PoolClient, userId: number) => {
   return result.rows[0];
 };
 
-// =========================
-// Get user's address
-// =========================
-
-export const getAddress = async (
-  client: PoolClient,
-  userId: number,
-  addressId: number,
-): Promise<AddressRow | undefined> => {
-  const result = await client.query<AddressRow>(
-    `
-      SELECT id
-      FROM addresses
-      WHERE id = $1
-        AND user_id = $2;
-    `,
-    [addressId, userId],
-  );
-
-  return result.rows[0];
-};
-
-// =========================
 // Create order
-// =========================
 
 export const createOrder = async (
   client: PoolClient,
@@ -104,17 +76,9 @@ export const createOrder = async (
       INSERT INTO orders (
         user_id,
         address_id,
-        status,
-        payment_status,
         total_price
       )
-      VALUES (
-        $1,
-        $2,
-        'PENDING',
-        'PENDING',
-        $3
-      )
+      VALUES ($1, $2, $3)
       RETURNING *;
     `,
     [userId, addressId, totalPrice],
@@ -123,10 +87,7 @@ export const createOrder = async (
   return result.rows[0];
 };
 
-// =========================
 // Create order items
-// =========================
-
 export const createOrderItems = async (
   client: PoolClient,
   orderId: number,
@@ -136,37 +97,41 @@ export const createOrderItems = async (
     productPrice: number;
   }[],
 ): Promise<CreatedOrderItemRow[]> => {
-  const createdItems: CreatedOrderItemRow[] = [];
+  const values: number[] = [];
+  const placeholders: string[] = [];
 
-  for (const item of items) {
-    const result = await client.query<CreatedOrderItemRow>(
-      `
-        INSERT INTO order_items (
-          order_id,
-          product_id,
-          quantity,
-          item_price
-        )
-        VALUES ($1, $2, $3, $4)
+  items.forEach((item, index) => {
+    const base = index * 4;
 
-        RETURNING
-          id,
-          product_id,
-          quantity,
-          item_price;
-      `,
-      [orderId, item.productId, item.quantity, item.productPrice],
+    placeholders.push(
+      `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4})`,
     );
 
-    createdItems.push(result.rows[0]);
-  }
+    values.push(orderId, item.productId, item.quantity, item.productPrice);
+  });
 
-  return createdItems;
+  const result = await client.query<CreatedOrderItemRow>(
+    `
+      INSERT INTO order_items (
+        order_id,
+        product_id,
+        quantity,
+        item_price
+      )
+      VALUES ${placeholders.join(", ")}
+      RETURNING
+        id,
+        product_id,
+        quantity,
+        item_price;
+    `,
+    values,
+  );
+
+  return result.rows;
 };
 
-// =========================
 // Decrease stock
-// =========================
 
 export const decreaseStock = async (
   client: PoolClient,
@@ -188,16 +153,14 @@ export const decreaseStock = async (
     );
 
     if (result.rowCount !== 1) {
-      throw new Error(
+      throw new ConflictError(
         `Failed to decrease stock for product ${product.productId}`,
       );
     }
   }
 };
 
-// =========================
 // Delete cart items
-// =========================
 
 export const deleteCartItems = async (
   client: PoolClient,
@@ -210,4 +173,80 @@ export const deleteCartItems = async (
     `,
     [cartItemsId],
   );
+};
+
+//create inventory reservations
+
+export const createInventoryReservations = async (
+  client: PoolClient,
+  reservations: {
+    orderItemId: number;
+    quantity: number;
+  }[],
+) => {
+  if (reservations.length === 0) {
+    return [];
+  }
+
+  const values: (number | string)[] = [];
+
+  const rows = reservations
+    .map((reservation, index) => {
+      const base = index * 2;
+
+      values.push(reservation.orderItemId, reservation.quantity);
+
+      return `($${base + 1}, $${base + 2},  NOW() + INTERVAL '15 minutes')`;
+    })
+    .join(", ");
+  await client.query(
+    `
+    insert into inventory_reservations 
+    (order_item_id, quantity, expired_at)
+    values ${rows}
+
+    `,
+    [...values],
+  );
+};
+
+// get available stocks
+
+type AvailableStock = {
+  product_id: number;
+  available_stock: number;
+};
+
+export const getAvailableStocks = async (
+  client: PoolClient,
+  productIds: number[],
+): Promise<AvailableStock[]> => {
+  const result = await client.query<AvailableStock>(
+    `
+      SELECT
+        p.id AS product_id,
+        p.quantity -
+        COALESCE(
+          SUM(
+            CASE
+              WHEN ir.status = 'ACTIVE'
+                AND ir.expired_at > NOW()
+              THEN ir.quantity
+              ELSE 0
+            END
+          ),
+          0
+        ) AS available_stock
+      FROM products p
+      LEFT JOIN order_items oi
+        ON oi.product_id = p.id
+      LEFT JOIN inventory_reservations ir
+        ON oi.id = ir.order_item_id
+      WHERE p.id = ANY($1::int[])
+      GROUP BY p.id, p.quantity;
+    `,
+    [productIds],
+  );
+
+  return result.rows;
 };

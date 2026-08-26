@@ -1,6 +1,6 @@
 // response.dto.ts
 
-import { SellerStatus } from "../../types/shared/status.js";
+import { SellerStatus } from "../../constants/status.js";
 
 export interface ResponseSellerDto {
   id: number;

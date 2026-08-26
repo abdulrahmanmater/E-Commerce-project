@@ -4,7 +4,7 @@ import { NextFunction, Request, Response } from "express";
 import { AppError } from "../errors/app-error";
 import { BadRequestError } from "../errors/bad-request-error";
 import { DatabaseError } from "pg";
-import { StatusCodes } from "../constants/status-codes";
+import { StatusCodes } from "../constants/status";
 
 export const globalErrorHandler = (
   err: Error,

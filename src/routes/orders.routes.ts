@@ -5,6 +5,7 @@ import { authorize } from "../middlewares/authorize.middleware";
 import { validate } from "../middlewares/validate.middleware";
 
 import {
+  cancelOrder,
   getOrderByOrderId,
   getOrders,
   updateOrderItemStatus,
@@ -13,7 +14,7 @@ import {
 import { ordersQuerySchema } from "../schemas/orders/get.order.schema";
 
 import { updateOrderItemStatusSchema } from "../schemas/orders/update.order.schema";
-import { UserRole } from "../types/shared/status";
+import { UserRole } from "../constants/status";
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.patch(
   validate(updateOrderItemStatusSchema),
   updateOrderItemStatus,
 );
+router.patch("/:orderId/cancel", auth, cancelOrder);
 
 export default router;

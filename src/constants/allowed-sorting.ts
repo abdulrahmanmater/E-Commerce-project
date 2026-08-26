@@ -23,9 +23,7 @@ export const sortOrderValues = Object.keys(allowedSortOrders) as [
 
 export const ordersALlowedSorting = {
   totalPrice: "o.total_price",
-  paymentStatus: "o.payment_status",
   createdAt: "o.created_at",
-  paidAt: "o.paid_at",
 } as const;
 
 export const ordersSortingValues = Object.keys(ordersALlowedSorting) as [

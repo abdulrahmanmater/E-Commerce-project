@@ -2,7 +2,7 @@
 
 import { PoolClient } from "pg";
 import pool from "../config/db";
-import { SellerStatus, StoreStatus } from "../types/shared/status.js";
+import { SellerStatus, StoreStatus } from "../constants/status.js";
 import {
   AdminSellerApplicationByUserIdRow,
   AdminSellerApplicationRow,

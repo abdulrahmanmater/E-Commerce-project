@@ -1,6 +1,6 @@
 //jwt.dto
 
-import { UserRole } from "../types/shared/status.js";
+import { UserRole } from "../constants/status.js";
 
 export interface TokenPayload {
   id: number;

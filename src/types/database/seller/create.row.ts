@@ -1,6 +1,6 @@
 //seller.row
 
-import { SellerStatus } from "../../shared/status.js";
+import { SellerStatus } from "../../../constants/status.js";
 
 export interface CreateSellerProfileData {
   national_id: string;

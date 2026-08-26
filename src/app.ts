@@ -8,8 +8,10 @@ import sellerRoutes from "./routes/sellers.routes";
 import adminRoutes from "./routes/admins.routes";
 import checkoutRoutes from "./routes/checkouts.routes";
 import storeRoutes from "./routes/stores.routes";
+import paymobRouter from "./routes/paymob.routes";
 import orderRoutes from "./routes/orders.routes";
 import cartRoutes from "./routes/carts.routes";
+import paymentRoutes from "./routes/payment.routes";
 import { globalErrorHandler } from "./middlewares/global-error-handler";
 import express from "express";
 const app = express();
@@ -26,6 +28,8 @@ app.use("/stores", storeRoutes);
 app.use("/carts", cartRoutes);
 app.use("/checkout", checkoutRoutes);
 app.use("/orders", orderRoutes);
+app.use("/payments/paymob", paymobRouter);
+app.use("/payments", paymentRoutes);
 
 app.use(globalErrorHandler);
 

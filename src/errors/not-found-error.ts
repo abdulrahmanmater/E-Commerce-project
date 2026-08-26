@@ -1,6 +1,6 @@
 //not-found-error.ts
 
-import { StatusCodes } from "../constants/status-codes";
+import { StatusCodes } from "../constants/status";
 import { AppError } from "./app-error";
 
 export class NotFoundError extends AppError {

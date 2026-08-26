@@ -12,7 +12,7 @@ import {
   UserByIdRow,
 } from "../types/database/user/user.row";
 import { UpdateUserData } from "../types/database/user/update-user.row";
-import { UserRole } from "../types/shared/status.js";
+import { UserRole } from "../constants/status.js";
 import { PoolClient } from "pg";
 
 //CreateUser

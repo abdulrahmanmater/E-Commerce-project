@@ -7,11 +7,11 @@ import { ConflictError } from "../errors/conflict-error";
 import { NotFoundError } from "../errors/not-found-error";
 
 import {
+  createInventoryReservations,
   createOrder,
   createOrderItems,
-  decreaseStock,
   deleteCartItems,
-  getAddress,
+  getAvailableStocks,
   lockCart,
   lockProducts,
 } from "../repositories/checkout.repository";
@@ -19,24 +19,17 @@ import {
 import { findALllStoresByStoresId } from "../repositories/store.repository";
 
 import { CheckoutDto } from "../dtos/checkout/checkout.dto";
+import { createPayment } from "../repositories/payment.repository";
+import { getAddressId } from "../repositories/address.repository";
 
-// =========================
-// Checkout
-// =========================
-
-export const checkout = async (userId: number, { addressId }: CheckoutDto) => {
+export const checkout = async (
+  userId: number,
+  { addressId, method }: CheckoutDto,
+) => {
   const client = await pool.connect();
 
   try {
-    // =====================================
-    // BEGIN TRANSACTION
-    // =====================================
-
     await client.query("BEGIN");
-
-    // =====================================
-    // 1. Lock user's cart
-    // =====================================
 
     const cart = await lockCart(client, userId);
 
@@ -44,19 +37,11 @@ export const checkout = async (userId: number, { addressId }: CheckoutDto) => {
       throw new NotFoundError("The cart not found");
     }
 
-    // =====================================
-    // 2. Verify address belongs to user
-    // =====================================
-
-    const address = await getAddress(client, userId, addressId);
+    const address = await getAddressId(client, userId, addressId);
 
     if (!address) {
       throw new NotFoundError("The address not found");
     }
-
-    // =====================================
-    // 3. Lock products
-    // =====================================
 
     const lockedProducts = await lockProducts(client, cart.id);
 
@@ -64,35 +49,39 @@ export const checkout = async (userId: number, { addressId }: CheckoutDto) => {
       throw new NotFoundError("No products in cart");
     }
 
-    // =====================================
-    // 4. Validate products
-    // =====================================
+    const productIds = lockedProducts.map((product) => product.product_id);
 
+    const availableStocks = await getAvailableStocks(client, productIds);
+    const availableStockMap = new Map(
+      availableStocks.map((stock) => [
+        stock.product_id,
+        Number(stock.available_stock),
+      ]),
+    );
     for (const product of lockedProducts) {
       if (product.is_hidden === true || product.deleted_at !== null) {
         throw new NotFoundError(
           `The product ${product.product_name} is removed from store`,
         );
       }
+      const availableStock = availableStockMap.get(product.product_id);
 
-      if (product.available_quantity < product.requested_quantity) {
+      if (availableStock === undefined) {
+        throw new NotFoundError(
+          `Stock information not found for product ${product.product_name}`,
+        );
+      }
+
+      if (availableStock < product.requested_quantity) {
         throw new BadRequestError(
-          `The product ${product.product_name} has no enough quantity`,
+          `The product ${product.product_name} has no enough available quantity`,
         );
       }
     }
 
-    // =====================================
-    // 5. Get unique stores
-    // =====================================
-
     const storeIds = [
       ...new Set(lockedProducts.map((product) => product.store_id)),
     ];
-
-    // =====================================
-    // 6. Verify all stores still exist
-    // =====================================
 
     const stores = await findALllStoresByStoresId(client, storeIds);
 
@@ -100,19 +89,11 @@ export const checkout = async (userId: number, { addressId }: CheckoutDto) => {
       throw new ConflictError("One or more stores are not available");
     }
 
-    // =====================================
-    // 7. Verify stores are active
-    // =====================================
-
     for (const store of stores) {
       if (store.status !== "OPEN" || store.deleted_at !== null) {
         throw new ConflictError("One or more stores are out of service");
       }
     }
-
-    // =====================================
-    // 8. Calculate total
-    // =====================================
 
     const totalPrice = lockedProducts.reduce(
       (total, product) =>
@@ -120,69 +101,35 @@ export const checkout = async (userId: number, { addressId }: CheckoutDto) => {
       0,
     );
 
-    // =====================================
-    // 9. Prepare order items
-    // =====================================
-
     const orderItemsData = lockedProducts.map((product) => ({
       productId: product.product_id,
       quantity: product.requested_quantity,
       productPrice: Number(product.product_price),
     }));
 
-    // =====================================
-    // 10. Prepare cart item IDs
-    // =====================================
-
     const cartItemsId = lockedProducts.map((product) => product.cart_item_id);
-
-    // =====================================
-    // 11. Create order
-    // =====================================
 
     const order = await createOrder(client, userId, addressId, totalPrice);
 
-    // =====================================
-    // 12. Create order items
-    // =====================================
-
     const orderItems = await createOrderItems(client, order.id, orderItemsData);
 
-    // =====================================
-    // 13. Decrease stock
-    // =====================================
+    const orderItemsForInventory = orderItems.map((item) => ({
+      orderItemId: item.id,
+      quantity: item.quantity,
+    }));
 
-    await decreaseStock(
-      client,
-      lockedProducts.map((product) => ({
-        productId: product.product_id,
-        quantity: product.requested_quantity,
-      })),
-    );
-
-    // =====================================
-    // 14. Delete cart items
-    // =====================================
+    await createInventoryReservations(client, orderItemsForInventory);
 
     await deleteCartItems(client, cartItemsId);
 
-    // =====================================
-    // 15. Commit
-    // =====================================
+    const payment = await createPayment(client, order.id, totalPrice, method);
 
     await client.query("COMMIT");
-
-    // =====================================
-    // Response
-    // =====================================
 
     const returnedOrder = {
       orderID: order.id,
       userId: order.user_id,
       addressId: order.address_id,
-      status: order.status,
-      paymentStatus: order.payment_status,
-      paidAt: order.paid_at,
       totalPrice: Number(order.total_price),
       createdAt: order.created_at,
     };
@@ -194,26 +141,27 @@ export const checkout = async (userId: number, { addressId }: CheckoutDto) => {
       itemPrice: Number(item.item_price),
     }));
 
+    const returnedPayment = {
+      id: payment.id,
+      orderId: payment.order_id,
+      amount: Number(payment.amount),
+      currency: payment.currency,
+      method: payment.method,
+      status: payment.status,
+      createdAt: payment.created_at,
+    };
+
     return {
       message: "Order created successfully",
-
       order: returnedOrder,
-
       orderItems: returnedOrderItems,
+      payment: returnedPayment,
     };
   } catch (err) {
-    // =====================================
-    // Rollback
-    // =====================================
-
     await client.query("ROLLBACK");
 
     throw err;
   } finally {
-    // =====================================
-    // Release connection
-    // =====================================
-
     client.release();
   }
 };

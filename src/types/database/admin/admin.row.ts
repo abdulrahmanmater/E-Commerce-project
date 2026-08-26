@@ -1,6 +1,10 @@
 // admin.row.ts — Row types for admin repository queries
 
-import { SellerStatus, StoreStatus, UserRole } from "../../shared/status.js";
+import {
+  SellerStatus,
+  StoreStatus,
+  UserRole,
+} from "../../../constants/status.js";
 
 /** Row from getSellerApplications JOIN query */
 export interface AdminSellerApplicationRow {

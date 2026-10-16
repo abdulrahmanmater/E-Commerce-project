@@ -189,6 +189,7 @@ export const getPaymentCheckoutData = async (
 
       WHERE p.id = $1
         AND o.user_id = $2
+        and u.deleted_at is NULL
 
       ORDER BY oi.id ASC
 

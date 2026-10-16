@@ -1,12 +1,13 @@
 // users.controller
 
 import { CreateUserDto } from "../dtos/user/create.dto";
-import { UpdateUserDto } from "../dtos/user/update.dto";
+import { UpdateUserDto, UpdateUserPasswordDto } from "../dtos/user/update.dto";
 import {
   createUser as createUserService,
   getCurrentUser as getCurrentUserService,
   updateUser as updateUserService,
   deleteUser as deleteUserService,
+  updateUserPassword as updateUserPasswordService,
 } from "../services/user.service";
 import { Request, Response } from "express";
 
@@ -32,6 +33,19 @@ export const updateUser = async (req: Request, res: Response) => {
       await updateUserService(
         Number(req.user.id),
         req.validated!.body as UpdateUserDto,
+      ),
+    );
+};
+
+//update user password
+
+export const updateUserPassword = async (req: Request, res: Response) => {
+  return res
+    .status(200)
+    .json(
+      await updateUserPasswordService(
+        Number(req.user.id),
+        req.validated!.body as UpdateUserPasswordDto,
       ),
     );
 };

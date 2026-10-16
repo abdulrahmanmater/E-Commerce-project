@@ -21,7 +21,7 @@ export const getSellerApplications = async () => {
     `
             SELECT u.id AS user_id, u.full_name, u.email, u.role, sp.national_id, sp.national_id_image, sp.bank_name, s.name AS store_name, sp.status AS seller_status, s.status AS store_status
             FROM seller_profiles sp inner join users u on u.id = sp.user_id 
-            inner join stores s on s.seller_profile_id =sp.id WHERE sp.status = 'PENDING';
+            inner join stores s on s.seller_profile_id =sp.id WHERE sp.status = 'PENDING' and u.deleted_at is NULL;
         `,
   );
   return applications.rows;
@@ -34,7 +34,7 @@ export const getSellerApplicationByUserId = async (id: number) => {
     `
             SELECT u.id AS user_id, u.full_name, u.email, u.role, sp.national_id, sp.national_id_image, sp.bank_name, s.name AS store_name, sp.status AS seller_status, s.status AS store_status
             FROM seller_profiles sp inner join users u on u.id = sp.user_id 
-            inner join stores s on s.seller_profile_id =sp.id where u.id = $1 and sp.status = 'PENDING';
+            inner join stores s on s.seller_profile_id =sp.id where u.id = $1 and sp.status = 'PENDING' and u.deleted_at is NULL;
         `,
     [id],
   );
@@ -48,7 +48,7 @@ export const getSellerApplication = async (client: PoolClient, id: number) => {
     `
             SELECT u.full_name AS user_full_name, u.id AS user_id, sp.id AS seller_profile_id, sp.national_id, sp.national_id_image, sp.bank_name, s.name AS store_name, sp.status AS seller_status
             FROM seller_profiles sp inner join users u on u.id = sp.user_id 
-            inner join stores s on s.seller_profile_id =sp.id where u.id = $1 for update;
+            inner join stores s on s.seller_profile_id =sp.id where u.id = $1 and u.deleted_at is NULL for update;
         `,
     [id],
   );
@@ -100,7 +100,7 @@ export const changeStoreStatus = async (
 
 export const lockUser = async (client: PoolClient, userId: number) => {
   const result = await client.query<LockedAdminUserRow>(
-    `SELECT id, full_name, email, role FROM users WHERE id = $1 FOR UPDATE`,
+    `SELECT id, full_name, email, role FROM users WHERE id = $1 and deleted_at is NULL FOR UPDATE`,
     [userId],
   );
   return result.rows[0];

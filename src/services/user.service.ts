@@ -13,12 +13,14 @@ import {
   findUserById,
   deleteUser as deleteUserRepository,
   updateUser as updateUserRepository,
+  updateUserPassword as updateUserPasswordRepository,
 } from "../repositories/user.repository";
-import { hashPassword } from "../utils/password";
+import { comparePassword, hashPassword } from "../utils/password";
 import { generateAccessToken } from "../utils/jwt";
-import { UpdateUserDto } from "../dtos/user/update.dto";
+import { UpdateUserDto, UpdateUserPasswordDto } from "../dtos/user/update.dto";
 import { UpdateUserData } from "../types/database/user/update-user.row";
 import { ConflictError } from "../errors/conflict-error";
+import { UnauthorizedError } from "../errors/unauthorized-error";
 
 interface UserResponseSourceRow {
   id: number;
@@ -104,6 +106,38 @@ export const updateUser = async (
   return {
     message: "Profile updated successfully",
     user: toUserResponseDto(updatedUser),
+  };
+};
+
+// update user password
+
+export const updateUserPassword = async (
+  id: number,
+  { oldPassword, newPassword }: UpdateUserPasswordDto,
+) => {
+  const user = await findUserById(id);
+  if (!user) {
+    throw new NotFoundError();
+  }
+
+  const existedUser = await findUserByEmail(user.email);
+
+  const isPasswordCorrect = await comparePassword(
+    oldPassword,
+    existedUser!.password_hash,
+  );
+  if (!isPasswordCorrect) {
+    throw new UnauthorizedError("The Password is incorrect");
+  }
+  const hash = await hashPassword(newPassword);
+
+  const updatedUser = await updateUserPasswordRepository(id, hash);
+  if (!updatedUser) {
+    throw new ConflictError();
+  }
+
+  return {
+    message: "Password updated successfully",
   };
 };
 

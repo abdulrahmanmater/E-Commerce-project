@@ -8,8 +8,7 @@ import {
 import { comparePassword } from "../utils/password";
 import { findUserByEmail } from "../repositories/user.repository";
 import { generateAccessToken } from "../utils/jwt";
-import { AppError } from "../errors/app-error";
-import { StatusCodes } from "../constants/status";
+import { UnauthorizedError } from "../errors/unauthorized-error";
 
 const toLoginUserResponseDto = (user: {
   id: number;
@@ -30,20 +29,14 @@ export const login = async (
 ): Promise<LoginResponseDto> => {
   const existedUser = await findUserByEmail(user.email);
   if (!existedUser) {
-    throw new AppError(
-      "the Password or email is incorrect",
-      StatusCodes.UNAUTHORIZED,
-    );
+    throw new UnauthorizedError("the Password or email is incorrect");
   }
   const isPasswordCorrect = await comparePassword(
     user.password,
     existedUser.password_hash,
   );
   if (!isPasswordCorrect) {
-    throw new AppError(
-      "the Password or email is incorrect",
-      StatusCodes.UNAUTHORIZED,
-    );
+    throw new UnauthorizedError("the Password or email is incorrect");
   }
   const token = generateAccessToken({
     id: existedUser.id,

@@ -158,7 +158,8 @@ export const getMyProducts = async (
         FROM users u 
         INNER JOIN seller_profiles sp ON sp.user_id = u.id
         INNER JOIN stores s ON s.seller_profile_id = sp.id
-        INNER JOIN products p ON p.store_id = s.id `;
+        INNER JOIN products p ON p.store_id = s.id 
+        where deleted_at is NULL`;
   const {
     page,
     limit,

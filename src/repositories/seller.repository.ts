@@ -35,6 +35,7 @@ export const lockUser = async (client: PoolClient, userId: number) => {
     SELECT id, full_name, email, role
     FROM users
     WHERE id = $1
+    and deleted_at is NULL
     FOR UPDATE;
     `,
     [userId],
@@ -126,7 +127,7 @@ export const findSellerContextByUserId = async (user_id: number) => {
         s.id store_id, s.name AS store_name, s.status AS store_status
             FROM seller_profiles 
             sp inner join users u on u.id = sp.user_id 
-            inner join stores s on s.seller_profile_id =sp.id WHERE user_id = $1
+            inner join stores s on s.seller_profile_id =sp.id WHERE user_id = $1 and u.deleted_at is NULL
     `,
     [user_id],
   );

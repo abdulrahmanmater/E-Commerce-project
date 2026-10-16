@@ -33,7 +33,7 @@ export const createUser = async (user: CreateUserDto) => {
 export const findUserByEmail = async (email: string) => {
   const existedUser = await pool.query<UserByEmailRow>(
     `
-            SELECT id, full_name, email, role, password_hash FROM users WHERE email = $1
+            SELECT id, full_name, email, role, password_hash FROM users WHERE email = $1 and deleted_at is  NULL
         `,
     [email],
   );
@@ -48,7 +48,7 @@ export const findUserByEmail = async (email: string) => {
 export const findUserById = async (id: number) => {
   const user = await pool.query<UserByIdRow>(
     `
-        SELECT id, full_name, email, role FROM users WHERE id = $1
+        SELECT id, full_name, email, role FROM users WHERE id = $1 and deleted_at is   NULL
     `,
     [id],
   );
@@ -59,7 +59,7 @@ export const findUserById = async (id: number) => {
 export const findUser = async (client: PoolClient, id: number) => {
   const user = await client.query<TransactionUserRow>(
     `
-        SELECT id, full_name, email, role FROM users WHERE id = $1
+        SELECT id, full_name, email, role FROM users WHERE id = $1 and deleted_at is   NULL
     `,
     [id],
   );
@@ -90,12 +90,27 @@ export const updateUser = async (
     `
         UPDATE users
         SET ${updates.join(", ")}
-        WHERE id = $${values.length}
+        WHERE id = $${values.length} and deleted_at is   NULL
         RETURNING id, full_name, email, role
     `,
     values,
   );
 
+  return result.rows[0];
+};
+
+//update user password
+
+export const updateUserPassword = async (id: number, hash: string) => {
+  const result = await pool.query(
+    `
+    UPDATE users
+        SET password_hash = $1
+        WHERE id = $2    
+        returning id
+    `,
+    [hash, id],
+  );
   return result.rows[0];
 };
 
@@ -105,7 +120,7 @@ export const deleteUser = async (
   id: number,
 ): Promise<DeletedUserRow | undefined> => {
   const result = await pool.query<DeletedUserRow>(
-    `delete from users where id = $1 returning id, full_name, email, role`,
+    `update users set deleted_at = NOW() where id = $1  returning id, full_name, email, role`,
     [id],
   );
   return result.rows[0];
@@ -123,6 +138,7 @@ export const updateUserRole = async (
         UPDATE users
         SET role = $1
         WHERE id = $2
+        and deleted_at is   NULL 
         RETURNING id, full_name, email, role
     `,
     [role, id],
